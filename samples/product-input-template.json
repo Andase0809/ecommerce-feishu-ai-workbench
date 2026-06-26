@@ -1,0 +1,12 @@
+[
+  {
+    "product_id": "demo-light-001",
+    "product_name": "便携式桌面补光灯",
+    "category": "数码配件",
+    "price_range": "99-199元",
+    "target_user": "经常拍摄短视频、直播或小红书图文的学生和轻办公用户",
+    "core_features": ["三档色温", "可调节亮度", "USB供电", "可折叠收纳"],
+    "usage_scenarios": ["宿舍拍摄", "桌面直播", "夜间学习", "产品拍照"],
+    "platform_style": ["小红书", "抖音", "电商平台"]
+  }
+]
