@@ -104,6 +104,11 @@ class FeishuBitableClient:
         fields = response.get("data", {}).get("items", [])
         return {field["field_name"]: field for field in fields if field.get("field_name") and field.get("field_id")}
 
+    def _list_view_ids(self, app_token: str, table_id: str) -> dict[str, str]:
+        response = self._get(f"/open-apis/bitable/v1/apps/{app_token}/tables/{table_id}/views?page_size=100")
+        views = response.get("data", {}).get("items", [])
+        return {view["view_name"]: view["view_id"] for view in views if view.get("view_name") and view.get("view_id")}
+
     def _create_views(
         self,
         app_token: str,
@@ -112,15 +117,19 @@ class FeishuBitableClient:
         field_metadata: dict[str, dict],
     ) -> dict[str, str]:
         created: dict[str, str] = {}
+        existing_views = self._list_view_ids(app_token, table_id)
         for view in view_payloads:
-            response = self._post(
-                f"/open-apis/bitable/v1/apps/{app_token}/tables/{table_id}/views",
-                {"view_name": view.name, "view_type": view.view_type},
-            )
-            view_data = response.get("data", {}).get("view", {})
-            view_id = view_data.get("view_id") or response.get("data", {}).get("view_id")
+            view_id = existing_views.get(view.name)
             if not view_id:
-                raise FeishuError(f"创建视图成功但未返回 view_id：{response}")
+                response = self._post(
+                    f"/open-apis/bitable/v1/apps/{app_token}/tables/{table_id}/views",
+                    {"view_name": view.name, "view_type": view.view_type},
+                )
+                view_data = response.get("data", {}).get("view", {})
+                view_id = view_data.get("view_id") or response.get("data", {}).get("view_id")
+                if not view_id:
+                    raise FeishuError(f"创建视图成功但未返回 view_id：{response}")
+                existing_views[view.name] = view_id
             created[view.name] = view_id
             property_payload = _view_property(view, field_metadata)
             if property_payload:

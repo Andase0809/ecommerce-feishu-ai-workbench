@@ -30,7 +30,7 @@ def _payload() -> dict:
                         "店铺展示主图": "https://img.example.com/main.jpg",
                         "商品链接": "https://item.jd.com/100026582726.html",
                         "店铺列表来源": "https://mall.jd.com/list.html",
-                        "标签": "4000K、酷毙灯、磁吸",
+                        "标签": "4000K、酷毙灯、磁吸、宿舍",
                         "SKU变体状态": "已采集",
                         "关联系列品": "【经济款】酷毙灯",
                         "关联变体数": 8,
@@ -100,6 +100,9 @@ def test_product_table_uses_visual_field_types_and_record_values() -> None:
     fields = {field["field_name"]: field for field in product_table.fields}
     record = product_table.records[0]["fields"]
 
+    assert product_table.fields[0]["field_name"] == "商品识别卡片"
+    assert product_table.fields[1]["field_name"] == "商品主图"
+    assert product_table.fields[2]["field_name"] == "标签摘要"
     assert fields["商品主图"]["type"] == ATTACHMENT_FIELD
     assert fields["商品链接"]["type"] == URL_FIELD
     assert fields["价格数值"]["type"] == NUMBER_FIELD
@@ -107,8 +110,22 @@ def test_product_table_uses_visual_field_types_and_record_values() -> None:
     assert fields["标签"]["type"] == MULTI_SELECT_FIELD
     assert record["商品链接"] == {"text": "打开商品", "link": "https://item.jd.com/100026582726.html"}
     assert record["价格数值"] == 17.47
-    assert record["标签"] == ["4000K", "酷毙灯", "磁吸"]
+    assert record["标签"] == ["4000K", "酷毙灯", "磁吸", "宿舍"]
     assert len(product_table.attachment_uploads) == 1
+
+
+def test_product_identity_and_tags_are_multiline_for_readability() -> None:
+    product_table = build_shop_workbench_table_payloads(_payload())[1]
+    record = product_table.records[0]["fields"]
+    default_view = product_table.views[0]
+
+    assert "\n" in record["商品识别卡片"]
+    assert "SKU 100026582726" in record["商品识别卡片"]
+    assert record["标签摘要"] == "4000K / 酷毙灯 / 磁吸\n宿舍"
+    assert default_view.name == "商品清单"
+    assert "商品名称" in default_view.hidden_fields
+    assert "标签" in default_view.hidden_fields
+    assert "店铺展示主图URL" in default_view.hidden_fields
 
 
 def test_overview_counts_are_computed_from_payload_only() -> None:

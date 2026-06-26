@@ -98,3 +98,39 @@ def test_prepare_records_downgrades_attachment_upload_failure() -> None:
 
     assert "商品主图" not in records[0]["fields"]
     assert records[0]["fields"]["图片上传状态"].startswith("上传失败")
+
+
+def test_create_views_reuses_existing_view_before_creating_new_one() -> None:
+    client = FeishuBitableClient.__new__(FeishuBitableClient)
+    created_posts: list[dict] = []
+    patches: list[tuple[str, dict]] = []
+
+    def fake_list_view_ids(app_token: str, table_id: str) -> dict[str, str]:
+        return {"商品清单": "vew_default"}
+
+    def fake_post(uri: str, body: dict) -> dict:
+        created_posts.append(body)
+        return {"data": {"view": {"view_id": "vew_new"}}}
+
+    def fake_patch(uri: str, body: dict) -> dict:
+        patches.append((uri, body))
+        return {"code": 0}
+
+    client._list_view_ids = fake_list_view_ids  # type: ignore[method-assign]
+    client._post = fake_post  # type: ignore[method-assign]
+    client._patch = fake_patch  # type: ignore[method-assign]
+
+    result = client._create_views(
+        "app_token",
+        "table_id",
+        [
+            ViewPayload(name="商品清单", hidden_fields=["备注"]),
+            ViewPayload(name="商品图库", view_type="gallery"),
+        ],
+        {"备注": "fld_note"},
+    )
+
+    assert result == {"商品清单": "vew_default", "商品图库": "vew_new"}
+    assert created_posts == [{"view_name": "商品图库", "view_type": "gallery"}]
+    assert patches[0][0].endswith("/views/vew_default")
+    assert patches[0][1] == {"property": {"hidden_fields": ["fld_note"]}}

@@ -145,36 +145,49 @@ def _product_payload(products: list[dict[str, Any]]) -> TablePayload:
         for index, product in enumerate(products)
         if product.get("店铺展示主图")
     ]
-    visual_hidden = ["店铺展示主图URL", "店铺列表来源", "备注", "图片上传状态"]
-    table_hidden = ["店铺展示主图URL", "店铺列表来源", "备注"]
+    visual_hidden = ["店铺展示主图URL", "店铺列表来源", "商品名称", "备注", "图片上传状态"]
+    table_hidden = [
+        "店铺展示主图URL",
+        "店铺列表来源",
+        "商品名称",
+        "品牌",
+        "店铺名称",
+        "价格文本",
+        "标签",
+        "关联系列品",
+        "备注",
+        "图片上传状态",
+    ]
     return TablePayload(
         name=SHOP_PRODUCT_TABLE_NAME,
         default_view_name="商品清单",
         fields=[
-            _text_field("商品卡片标题"),
+            _text_field("商品识别卡片"),
             _attachment_field("商品主图"),
-            _text_field("店铺商品SKU"),
-            _text_field("商品名称"),
+            _text_field("标签摘要"),
             _single_select_field("商品定位", positions),
             _single_select_field("价格带", price_bands),
             _currency_field("价格数值"),
-            _text_field("价格文本"),
             _url_field("商品链接"),
+            _single_select_field("SKU变体状态", SKU_VARIANT_STATUS_OPTIONS),
+            _number_field("关联变体数", "0"),
+            _single_select_field("竞品分析状态", COMPETITOR_STATUS_OPTIONS),
+            _single_select_field("审核状态", REVIEW_STATUS_OPTIONS),
+            _text_field("店铺商品SKU"),
+            _text_field("商品名称"),
+            _text_field("价格文本"),
             _url_field("店铺展示主图URL"),
             _text_field("品牌"),
             _text_field("店铺名称"),
             _multi_select_field("标签", tag_options),
-            _single_select_field("SKU变体状态", SKU_VARIANT_STATUS_OPTIONS),
             _text_field("关联系列品"),
-            _number_field("关联变体数", "0"),
-            _single_select_field("竞品分析状态", COMPETITOR_STATUS_OPTIONS),
-            _single_select_field("审核状态", REVIEW_STATUS_OPTIONS),
             _text_field("图片上传状态"),
             _url_field("店铺列表来源"),
             _text_field("备注"),
         ],
         records=records,
         views=[
+            ViewPayload("商品清单", hidden_fields=table_hidden),
             ViewPayload("商品图库", "gallery", hidden_fields=visual_hidden),
             ViewPayload("按价格带", hidden_fields=table_hidden),
             ViewPayload("按商品定位", hidden_fields=table_hidden),
@@ -208,7 +221,7 @@ def _variant_payload(variants: list[dict[str, Any]]) -> TablePayload:
         name=SKU_VARIANT_TABLE_NAME,
         default_view_name="SKU变体矩阵",
         fields=[
-            _text_field("变体卡片标题"),
+            _text_field("变体识别卡片"),
             _attachment_field("变体图"),
             _text_field("店铺商品SKU"),
             _text_field("变体SKU"),
@@ -346,7 +359,7 @@ def _product_record(product: dict[str, Any]) -> dict[str, dict[str, Any]]:
     image_url = product.get("店铺展示主图")
     return {
         "fields": {
-            "商品卡片标题": _short_title(product.get("商品名称")),
+            "商品识别卡片": _product_identity_card(product),
             "店铺商品SKU": str(product.get("店铺商品SKU", "")),
             "商品名称": str(product.get("商品名称", "")),
             "商品定位": str(product.get("商品定位", "")),
@@ -358,6 +371,7 @@ def _product_record(product: dict[str, Any]) -> dict[str, dict[str, Any]]:
             "品牌": str(product.get("品牌", "")),
             "店铺名称": str(product.get("店铺名称", "")),
             "标签": _split_tags(product.get("标签")),
+            "标签摘要": _tags_summary(product.get("标签")),
             "SKU变体状态": str(product.get("SKU变体状态") or "未采集"),
             "关联系列品": str(product.get("关联系列品", "")),
             "关联变体数": _number_or_zero(product.get("关联变体数")),
@@ -373,7 +387,7 @@ def _product_record(product: dict[str, Any]) -> dict[str, dict[str, Any]]:
 def _variant_record(variant: dict[str, Any]) -> dict[str, dict[str, Any]]:
     return {
         "fields": {
-            "变体卡片标题": _short_title(variant.get("款式") or variant.get("变体商品名称")),
+            "变体识别卡片": _variant_identity_card(variant),
             "店铺商品SKU": str(variant.get("店铺商品SKU", "")),
             "变体SKU": str(variant.get("变体SKU", "")),
             "系列品": str(variant.get("系列品", "")),
@@ -398,6 +412,32 @@ def _variant_record(variant: dict[str, Any]) -> dict[str, dict[str, Any]]:
 
 def _variant_image_url(variant: dict[str, Any]) -> str:
     return str(variant.get("款式小图") or variant.get("变体详情主图") or variant.get("店铺展示主图") or "")
+
+
+def _product_identity_card(product: dict[str, Any]) -> str:
+    title = _wrap_text(str(product.get("商品名称") or ""), width=22)
+    meta = [
+        str(product.get("价格文本") or "").strip(),
+        str(product.get("商品定位") or "").strip(),
+    ]
+    sku = str(product.get("店铺商品SKU") or "").strip()
+    lines = [title, " / ".join(item for item in meta if item)]
+    if sku:
+        lines.append(f"SKU {sku}")
+    return "\n".join(line for line in lines if line)
+
+
+def _variant_identity_card(variant: dict[str, Any]) -> str:
+    title = _wrap_text(str(variant.get("款式") or variant.get("变体商品名称") or ""), width=22)
+    meta = [
+        str(variant.get("变体价格文本") or "").strip(),
+        str(variant.get("评价量文本") or "").strip(),
+    ]
+    sku = str(variant.get("变体SKU") or "").strip()
+    lines = [title, " / ".join(item for item in meta if item)]
+    if sku:
+        lines.append(f"SKU {sku}")
+    return "\n".join(line for line in lines if line)
 
 
 def _text_field(name: str) -> dict[str, Any]:
@@ -471,9 +511,17 @@ def _split_tags(value: Any) -> list[str]:
     return _unique_strings([item for item in re.split(r"[、,，\s]+", str(value or "")) if item])
 
 
-def _short_title(value: Any, max_length: int = 34) -> str:
-    text = str(value or "").replace("公牛（BULL）", "").strip()
-    return text if len(text) <= max_length else f"{text[:max_length]}..."
+def _tags_summary(value: Any, per_line: int = 3) -> str:
+    tags = _split_tags(value)
+    lines = [tags[index : index + per_line] for index in range(0, len(tags), per_line)]
+    return "\n".join(" / ".join(line) for line in lines)
+
+
+def _wrap_text(value: str, width: int) -> str:
+    text = value.replace("公牛（BULL）", "").strip()
+    if len(text) <= width:
+        return text
+    return "\n".join(text[index : index + width] for index in range(0, len(text), width))
 
 
 def _number_or_zero(value: Any) -> int:
