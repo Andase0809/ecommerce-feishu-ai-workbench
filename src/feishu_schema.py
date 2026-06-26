@@ -1,12 +1,16 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from .models import ProductOutput
 
 
 TEXT_FIELD = 1
+NUMBER_FIELD = 2
 SINGLE_SELECT_FIELD = 3
+MULTI_SELECT_FIELD = 4
+URL_FIELD = 15
+ATTACHMENT_FIELD = 17
 
 PRODUCT_TABLE_NAME = "商品主表"
 PLATFORM_TABLES = {
@@ -18,10 +22,38 @@ REVIEW_STATUS_OPTIONS = ["待审核", "需修改", "已通过"]
 
 
 @dataclass(frozen=True)
+class ViewFilter:
+    field_name: str
+    operator: str
+    value: str | list[str] | int | float | bool
+
+
+@dataclass(frozen=True)
+class ViewPayload:
+    name: str
+    view_type: str = "grid"
+    hidden_fields: list[str] = field(default_factory=list)
+    filters: list[ViewFilter] = field(default_factory=list)
+    conjunction: str = "and"
+
+
+@dataclass(frozen=True)
+class AttachmentUpload:
+    record_index: int
+    attachment_field: str
+    source_url: str
+    file_name: str
+    fallback_status_field: str | None = None
+
+
+@dataclass(frozen=True)
 class TablePayload:
     name: str
     fields: list[dict]
     records: list[dict]
+    default_view_name: str = "默认表格视图"
+    views: list[ViewPayload] = field(default_factory=list)
+    attachment_uploads: list[AttachmentUpload] = field(default_factory=list)
 
 
 def build_table_payloads(outputs: list[ProductOutput]) -> list[TablePayload]:

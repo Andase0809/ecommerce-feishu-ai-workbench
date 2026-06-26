@@ -1,0 +1,69 @@
+{
+  "base_name": "电商商品数据工作台-demo",
+  "generated_at": "2026-06-26T16:00:00",
+  "data_status": "demo数据",
+  "tables": [
+    {
+      "table_name": "店铺主要商品表",
+      "records": [
+        {
+          "记录类型": "店铺主要商品",
+          "店铺商品SKU": "demo-shop-001",
+          "商品名称": "示例品牌 护眼学习台灯 国AA级 三档调光",
+          "品牌": "示例品牌",
+          "店铺名称": "示例照明店",
+          "价格文本": "￥129.00",
+          "价格数值": 129,
+          "价格带": "中价：100-199元",
+          "商品定位": "学习护眼台灯",
+          "店铺展示主图": "https://example.com/demo-lamp.jpg",
+          "商品链接": "https://example.com/products/demo-shop-001",
+          "店铺列表来源": "https://example.com/shop/demo",
+          "标签": "AA级、调光、学习",
+          "SKU变体状态": "已采集",
+          "关联系列品": "护眼学习系列",
+          "关联变体数": 2,
+          "竞品分析状态": "竞品未采集",
+          "审核状态": "待审核",
+          "备注": "demo 自造数据。"
+        }
+      ]
+    },
+    {
+      "table_name": "SKU款式变体表",
+      "records": [
+        {
+          "记录类型": "SKU款式变体",
+          "店铺商品SKU": "demo-shop-001",
+          "变体SKU": "demo-variant-001",
+          "系列品": "护眼学习系列",
+          "款式": "白色基础款",
+          "变体商品名称": "示例品牌 护眼学习台灯 白色基础款",
+          "变体价格文本": "¥129.00",
+          "划线价文本": "¥159.00",
+          "评价量文本": "demo",
+          "店铺展示主图": "https://example.com/demo-lamp.jpg",
+          "变体详情主图": "https://example.com/demo-lamp-white.jpg",
+          "款式小图": "https://example.com/demo-lamp-thumb.jpg",
+          "变体链接": "https://example.com/products/demo-variant-001",
+          "店铺主商品名称": "示例品牌 护眼学习台灯 国AA级 三档调光",
+          "竞品分析状态": "竞品未采集",
+          "审核状态": "待审核",
+          "备注": "demo 自造数据。"
+        }
+      ]
+    },
+    {
+      "table_name": "竞品分析表",
+      "records": []
+    },
+    {
+      "table_name": "运营建议表",
+      "records": []
+    }
+  ],
+  "boundary": [
+    "本文件为 demo 自造数据。",
+    "竞品数据尚未采集，不生成竞品结论。"
+  ]
+}
