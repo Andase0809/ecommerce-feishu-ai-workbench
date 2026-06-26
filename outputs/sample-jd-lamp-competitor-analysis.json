@@ -1,0 +1,183 @@
+{
+  "keyword": "台灯",
+  "target": {
+    "role": "target",
+    "source_url": "https://item.jd.com/100000000001.html",
+    "sku_id": "demo-target-001",
+    "product_name": "示例品牌A 国AA级护眼学习台灯 三档调光",
+    "brand": "示例品牌A",
+    "shop_name": "示例照明旗舰店",
+    "price_text": "￥129.00",
+    "price_range": "中价：100-199元",
+    "image_url": "https://example.com/images/demo-target-lamp.jpg",
+    "detail_params": {
+      "照度": "国AA级",
+      "色温": "4000K",
+      "显色指数": "Ra95",
+      "调光": "三档调光"
+    },
+    "selling_points": [
+      "国AA级照度",
+      "Ra95显色指数",
+      "三档调光"
+    ],
+    "review_count_text": "demo",
+    "collected_at": "2026-06-26T18:00:00+08:00",
+    "scrape_status": "成功",
+    "error_message": "",
+    "lamp_attributes": {
+      "illuminance": "国AA级",
+      "color_temperature": "4000K",
+      "cri": "Ra95",
+      "blue_light": "未识别",
+      "dimming": "三档调光",
+      "power": "8W",
+      "usage_scenario": "学习阅读"
+    }
+  },
+  "competitors": [
+    {
+      "role": "competitor",
+      "source_url": "https://item.jd.com/100000000101.html",
+      "sku_id": "demo-comp-001",
+      "product_name": "示例竞品1 护眼学习台灯 可调色温",
+      "brand": "示例竞品1",
+      "shop_name": "示例竞品店1",
+      "price_text": "￥119.00",
+      "price_range": "中价：100-199元",
+      "image_url": "https://example.com/images/demo-comp-001.jpg",
+      "detail_params": {
+        "照度": "国AA级",
+        "色温": "4000K",
+        "调光": "触控调光"
+      },
+      "selling_points": [
+        "国AA级照度",
+        "触控调光"
+      ],
+      "review_count_text": "demo",
+      "collected_at": "2026-06-26T18:00:00+08:00",
+      "scrape_status": "成功",
+      "error_message": "",
+      "lamp_attributes": {
+        "illuminance": "国AA级",
+        "color_temperature": "4000K",
+        "cri": "未识别",
+        "blue_light": "未识别",
+        "dimming": "触控调光",
+        "power": "8W",
+        "usage_scenario": "学习阅读"
+      }
+    },
+    {
+      "role": "competitor",
+      "source_url": "https://item.jd.com/100000000102.html",
+      "sku_id": "demo-comp-002",
+      "product_name": "示例竞品2 儿童学习台灯 多档调光",
+      "brand": "示例竞品2",
+      "shop_name": "示例竞品店2",
+      "price_text": "￥159.00",
+      "price_range": "中价：100-199元",
+      "image_url": "https://example.com/images/demo-comp-002.jpg",
+      "detail_params": {
+        "照度": "国AA级",
+        "色温": "可调色温",
+        "显色指数": "Ra90"
+      },
+      "selling_points": [
+        "多档调光",
+        "儿童学习场景"
+      ],
+      "review_count_text": "demo",
+      "collected_at": "2026-06-26T18:00:00+08:00",
+      "scrape_status": "成功",
+      "error_message": "",
+      "lamp_attributes": {
+        "illuminance": "国AA级",
+        "color_temperature": "可调色温",
+        "cri": "Ra90",
+        "blue_light": "未识别",
+        "dimming": "多档调光",
+        "power": "10W",
+        "usage_scenario": "儿童学习"
+      }
+    },
+    {
+      "role": "competitor",
+      "source_url": "https://item.jd.com/100000000103.html",
+      "sku_id": "demo-comp-003",
+      "product_name": "示例竞品3 桌面阅读台灯 无极调光",
+      "brand": "示例竞品3",
+      "shop_name": "示例竞品店3",
+      "price_text": "￥99.00",
+      "price_range": "低价：100元以下",
+      "image_url": "https://example.com/images/demo-comp-003.jpg",
+      "detail_params": {
+        "照度": "A级",
+        "调光": "无极调光"
+      },
+      "selling_points": [
+        "桌面阅读",
+        "无极调光"
+      ],
+      "review_count_text": "demo",
+      "collected_at": "2026-06-26T18:00:00+08:00",
+      "scrape_status": "成功",
+      "error_message": "",
+      "lamp_attributes": {
+        "illuminance": "A级",
+        "color_temperature": "未识别",
+        "cri": "未识别",
+        "blue_light": "未识别",
+        "dimming": "无极调光",
+        "power": "6W",
+        "usage_scenario": "桌面阅读"
+      }
+    }
+  ],
+  "analysis": {
+    "keyword": "台灯",
+    "target_sku_id": "demo-target-001",
+    "competitor_count": 3,
+    "opportunity_level": "中",
+    "common_patterns": [
+      "竞品在照度上高频出现“国AA级”，可作为用户对比时的基础信息",
+      "竞品在场景上高频出现“学习阅读”，可作为用户对比时的基础信息"
+    ],
+    "target_differentiators": [
+      "主商品的显色指数为“Ra95”，可作为差异化信息进一步核对",
+      "主商品可围绕“学习阅读”强化使用场景表达"
+    ],
+    "opportunities": [
+      "将竞品高频参数整理为对比表，突出本店商品已具备和待补充的信息",
+      "标题优先覆盖“护眼学习台灯、宿舍/儿童/办公、调光色温”等用户检索词",
+      "围绕竞品共性提炼基础卖点，再用主商品差异点补充第二层表达"
+    ],
+    "risks": [
+      "页面价格、促销和评价量会变化，分析只代表采集时可见信息",
+      "护眼、防蓝光、照度等参数需要以详情页和商品资质为准，发布前必须人工复核"
+    ],
+    "title_directions": [
+      "台灯 护眼学习台灯 国AA级 4000K",
+      "示例品牌A台灯｜防蓝光参数待补录｜三档调光",
+      "适合学习阅读的台灯，参数清晰版"
+    ],
+    "detail_page_directions": [
+      "首屏参数区展示照度、色温、显色指数、防蓝光：国AA级 / 4000K / Ra95 / 未识别",
+      "增加竞品同类参数对比说明，但避免使用无法证明的排名或销量表达",
+      "把适用场景拆成学习阅读、卧室床头、桌面办公等模块，方便用户快速判断"
+    ],
+    "platform_content_directions": [
+      "小红书方向：围绕学习阅读做真实桌面使用体验和参数核对清单",
+      "抖音方向：用三段式口播讲清痛点、关键参数和下单前复核点",
+      "电商平台方向：标题和详情页优先写清参数，不使用绝对化功效承诺"
+    ],
+    "review_checklist": [
+      "核对主商品与竞品 URL 是否来自公开页面，避免混入非同类商品",
+      "检查价格、评价量、促销信息是否为采集时页面可见内容，不做长期承诺",
+      "检查是否出现销量、排名、转化率、GMV 等无法证明的表达",
+      "公开展示前对主图、店铺名、商品名等信息做脱敏",
+      "发布前由人工复核护眼、防蓝光、照度等参数是否与详情页一致"
+    ]
+  }
+}

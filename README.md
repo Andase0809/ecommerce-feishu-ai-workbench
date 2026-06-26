@@ -1,16 +1,74 @@
-# 电商商品信息生成助手
+# 电商商品数据分析与飞书自动化工作台
 
-这是一个面向电商运营新人和 AI 赋能运营场景的小型工具。它读取 demo 商品基础信息，基于规则化 Prompt 模板生成商品标题、核心卖点、平台口吻文案、标签和人工审核清单，并可自动创建飞书多维表格进行整理。
+这是一个面向电商运营、商品运营和 AI 赋能运营场景的个人项目。项目把商品基础数据、SKU 变体、竞品商品和规则化分析结果同步到飞书多维表格，形成可筛选、可视化、可人工审核的数据工作台。
 
-> 数据说明：本项目所有商品均为 demo 自造数据，不包含真实商家、真实销量、真实转化率或真实商品运营数据。
+> 数据说明：仓库内样例均为 demo 或脱敏示例数据。真实 `.env`、本地浏览器缓存、真实采集结果、飞书 `app_token` 和本地输出文件不会提交到 Git。
 
-## 功能
+## 项目亮点
 
-- 读取 JSON 商品输入。
-- 为小红书、抖音、电商平台生成差异化文案。
-- 输出本地 JSON，便于调试和作品集留档。
-- 通过飞书 OpenAPI 自动创建多维表格：商品主表、小红书内容表、抖音内容表、电商平台内容表。
-- 为每个平台内容写入“待审核 / 需修改 / 已通过”审核状态，体现 AI 输出后的人工复核流程。
+- 商品数据结构化：沉淀商品名称、价格带、商品定位、SKU、主图、标签、店铺、链接、采集状态等运营字段。
+- 飞书自动化同步：通过飞书 OpenAPI 自动创建 Base、数据表、字段、附件图片、URL 字段、单选/多选标签、筛选视图和图库视图。
+- 竞品分析工作台：围绕同价位竞品生成竞品池、共性归纳、主商品差异点、机会方向、运营建议和人工审核清单。
+- AI 运营边界：v0.1 使用规则化分析模板，不虚构销量、排名、GMV、转化率或真实商家使用效果。
+
+## 技术栈
+
+- Python 3
+- 飞书多维表格 OpenAPI / `lark-oapi`
+- `pydantic`：输入数据校验与结构化模型
+- `python-dotenv`：本地密钥配置
+- `beautifulsoup4`：HTML 解析与离线 fixture 测试
+- `Playwright` / `DrissionPage`：可选浏览器自动化能力，用于人工可控的数据采集流程
+- `pytest`：单元测试与回归验证
+
+## 工作流
+
+```mermaid
+flowchart LR
+    A["商品/竞品数据输入"] --> B["字段清洗与模型校验"]
+    B --> C["规则化分析与人工审核清单"]
+    C --> D["飞书 Base 自动创建"]
+    D --> E["商品工作台"]
+    D --> F["SKU 变体表"]
+    D --> G["竞品分析工作台"]
+    D --> H["运营建议表"]
+```
+
+## 功能模块
+
+### 1. 商品信息生成 v0
+
+读取 demo 商品 JSON，生成商品标题、核心卖点、平台口吻文案、标签和人工检查清单，并可同步到飞书多维表格。
+
+```powershell
+python -m src.main --input samples/products.json --dry-run true
+```
+
+### 2. 商品运营视觉工作台 v0.1
+
+读取清洗后的店铺商品数据，创建飞书视觉工作台：
+
+- `运营总览表`
+- `店铺主要商品表`
+- `SKU款式变体表`
+- `竞品任务/分析表`
+- `运营建议表`
+
+```powershell
+python -m src.main sync-shop-workbench --input samples/shop-workbench.example.json --dry-run true --upload-images true
+```
+
+同步到飞书时会使用附件字段上传商品主图。若图片上传失败，程序会保留图片 URL 和失败原因，不中断整批同步。
+
+### 3. 竞品分析工作台 v0.1
+
+输入 1 个主商品 URL 和 10 个竞品 URL，生成本店商品表、竞品商品表、竞品对比分析表和运营建议表。竞品表同样支持附件主图、商品链接、价格数值、采集状态和图库视图。
+
+```powershell
+python -m src.main analyze-competitors --input samples/jd-lamp-urls.example.json --dry-run true --headful true
+```
+
+真实 URL 文件请使用 `samples/*.local.json`，该类文件已加入 `.gitignore`。
 
 ## 快速开始
 
@@ -18,199 +76,97 @@
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
-python -m src.main --input samples/products.json --dry-run true
+python -m pytest -q
 ```
 
-dry-run 会生成本地文件 `outputs/generated-products.json`，并预览即将创建的飞书表结构，不会调用飞书 API。
-
-## 同步到飞书多维表格
+如需同步到飞书：
 
 1. 在飞书开放平台创建企业自建应用。
-2. 为应用开通多维表格相关权限，并完成权限发布。
-3. 复制 `.env.example` 为 `.env`，填入应用凭证：
+2. 开通多维表格、云文档附件上传等相关权限。
+3. 复制 `.env.example` 为 `.env` 并填写：
 
 ```text
 FEISHU_APP_ID=cli_xxxxxxxxxxxxxxxx
 FEISHU_APP_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
 
-4. 运行同步命令：
-
-```powershell
-python -m src.main --input samples/products.json --dry-run false
-```
-
-程序会在“我的空间”根目录创建一个名为“电商商品信息生成助手-日期时间”的多维表格，并写入 4 张数据表。
-
-## v0.1：电商商品数据飞书工作台
-
-v0.1 在原有商品文案生成流程之外，新增“采集数据清洗 + AI 规则分析 + 飞书多维表格同步”的数据化工作台能力。它的核心不是绑定某个平台或某个品类，而是把已经采集并清洗好的商品数据，整理为企业可查看、可筛选、可对比、可跟进的飞书表格视图。
-
-当前仓库使用“京东台灯 / 100 元左右商品”作为演示样例，用来验证商品字段抽取、竞品对比、分析结论和飞书同步链路。后续可以替换为其他平台、其他品类或企业内部已整理的数据源。
-
-先安装 Playwright 浏览器：
-
-```powershell
-python -m playwright install chromium
-```
-
-如果要使用当前演示样例，可以先运行自动发现：
-
-```powershell
-python -m src.main discover-competitors --keyword "欧普照明 台灯" --target-brand "欧普" --price-min 80 --price-max 160 --headful true --login-first true --user-data-dir .browser/drission-jd-profile
-```
-
-程序会把发现到的 1 个主商品 URL 和 10 个竞品 URL 写入 `samples/jd-lamp-urls.local.json`。默认发现模式为 `--discovery-mode auto`：DrissionPage 会先监听搜索页正常加载出的公开接口响应，优先从接口 JSON 中解析商品候选；如果未解析到商品，再回退到渲染 HTML 解析。监听必须在打开搜索页前启动，程序已按这个顺序处理。
-
-如果页面需要登录或安全确认，程序会保留浏览器窗口，等待用户在浏览器中完成操作后继续处理可见的公开数据。默认浏览器后端为 DrissionPage，`.browser/drission-jd-profile` 会保存本地浏览器登录态，后续批量采集可复用，不会提交到 Git。
-
-排查搜索发现时可以强制指定模式：
-
-```powershell
-python -m src.main discover-competitors --discovery-mode listen --listen-pattern "api?appid=search-pc-java&t" --headful true
-python -m src.main discover-competitors --discovery-mode html --headful true
-```
-
-浏览器路径默认自动检测本机 Chrome / Edge。也可以显式选择：
-
-```powershell
-python -m src.main discover-competitors --browser chrome --headful true
-python -m src.main discover-competitors --browser edge --headful true
-```
-
-如果自动检测失败，可以直接传浏览器可执行文件路径：
-
-```powershell
-python -m src.main discover-competitors --browser-path "C:\Program Files\Google\Chrome\Application\chrome.exe" --headful true
-```
-
-也可以复制 URL 模板并手动填入真实链接：
-
-```powershell
-Copy-Item samples/jd-lamp-urls.example.json samples/jd-lamp-urls.local.json
-```
-
-`samples/jd-lamp-urls.local.json` 不会提交到 Git。文件结构如下：
-
-```json
-{
-  "keyword": "台灯",
-  "target_url": "https://item.jd.com/100000000001.html",
-  "competitor_urls": [
-    "https://item.jd.com/100000000002.html"
-  ]
-}
-```
-
-真实运行时 `competitor_urls` 需要填写 10 个京东商品页 URL。
-
-运行 dry-run：
-
-```powershell
-python -m src.main analyze-competitors --input samples/jd-lamp-urls.local.json --dry-run true --headful true --user-data-dir .browser/drission-jd-profile
-```
-
-如果页面需要人工确认，程序会保留浏览器窗口，等待用户在浏览器中完成后继续。dry-run 会生成本地文件 `outputs/jd-lamp-competitor-analysis.json`，但不会调用飞书 API。
-
-同步到飞书：
-
-```powershell
-python -m src.main analyze-competitors --input samples/jd-lamp-urls.local.json --dry-run false --headful true --user-data-dir .browser/drission-jd-profile
-```
-
-如果 DrissionPage 后端在当前机器上不可用，可以临时回退到 Playwright：
-
-```powershell
-python -m src.main discover-competitors --browser-backend playwright --headful true --login-first true
-```
-
-程序会创建名为“电商商品数据工作台-日期时间”的 Base，当前演示样例中包含：
-
-- 本店商品表：保存主商品公开信息，并提供“查看竞品分析”入口。
-- 竞品商品表：保存 10 个竞品的公开字段、采集状态和失败原因。
-- 竞品对比分析表：保存竞品共性、主商品差异点、机会方向、风险提醒和人工审核清单。
-- 运营建议表：保存标题方向、详情页方向和平台内容方向，默认“待审核”。
-
-v0.1 采集字段包括商品名、URL、sku_id、品牌、店铺、价格文本、价格带、主图 URL、详情参数、卖点摘要、评价量文本和采集时间。演示样例中还会抽取台灯相关参数；迁移到其他品类时，可以替换为对应品类的核心参数字段。
-
-### 飞书视觉工作台优化
-
-为了让飞书多维表格更适合展示和业务查看，项目新增了“清洗商品数据 -> 飞书视觉工作台”的同步命令。它会新建一套重设计版 Base，不覆盖旧 Base，并自动生成：
-
-- 运营总览表：商品数、SKU 变体数、待竞品采集数、价格带分布、商品定位分布、审核状态分布。
-- 店铺主要商品表：商品主图附件、商品链接、价格数值、价格带、商品定位、SKU 变体状态、竞品分析状态。
-- SKU款式变体表：变体图片、款式、价格、评价量文本、变体链接和关联系列品。
-- 竞品任务/分析表：竞品未采集时只保留任务流和空状态，不虚构竞品结论。
-- 运营建议表：等待竞品数据补充后再生成建议，默认待审核。
-
-先运行 dry-run 预览字段、视图和图片上传计划：
-
-```powershell
-python -m src.main sync-shop-workbench --input samples/shop-workbench.example.json --dry-run true --upload-images true
-```
-
-同步到飞书时会创建新的重设计版 Base：
+4. 执行同步命令：
 
 ```powershell
 python -m src.main sync-shop-workbench --input samples/shop-workbench.example.json --dry-run false --upload-images true
 ```
 
-真实店铺清洗数据仍建议放在本地 `*.local.json` 或 `.browser/` 目录，不提交到 Git。当前本机公牛样例可用本地脚本运行：
+## 展示截图建议
 
-```powershell
-python .browser/local_tools/sync_redesigned_feishu_shop_products.py --upload-images true
+公开作品集或 GitHub 展示建议放 3-5 张脱敏截图：
+
+- 商品工作台：展示商品识别卡片、主图附件、彩色标签、价格带和商品定位。
+- 商品图库视图：展示飞书画册视图的商品图片。
+- 竞品工作台：展示本店商品和 10 个竞品的卡片化对比。
+- 竞品分析表：展示共性、差异点、机会方向和人工审核清单。
+- 终端运行截图：展示一条命令完成表格创建和同步。
+
+> 注意：截图中如包含真实商品名、店铺名、图片或 URL，发布前应脱敏或遮挡。
+
+## 目录结构
+
+```text
+src/
+  main.py                  # CLI 入口
+  feishu_client.py         # 飞书 Base/表/记录/视图/附件同步
+  feishu_schema.py         # 通用飞书表结构
+  shop_workbench_schema.py # 商品运营视觉工作台 schema
+  jd_feishu_schema.py      # 竞品分析视觉工作台 schema
+  competitor_analysis.py   # 规则化竞品分析
+  competitor_models.py     # 竞品输入/输出模型
+samples/
+  products.json
+  shop-workbench.example.json
+  jd-lamp-urls.example.json
+outputs/
+  sample-generated-products.json
+  sample-jd-lamp-competitor-analysis.json
+docs/
+  project-brief.md
+  open-source-references.md
+  case-study.md
+  demo-script.md
+  resume-value.md
+  security-and-data-boundary.md
 ```
 
-图片字段采用飞书附件能力：程序会临时读取公开图片 URL 并上传到当前 Base，成功后在画册视图中显示为图片；如果图片上传权限不足或单张图片失败，会保留图片 URL 和上传状态，不中断整批同步。飞书应用除多维表格编辑权限外，还需要具备上传图片和附件到云文档的相关权限。
+## 扩展文档
 
-表格默认视图会把“商品识别卡片、商品主图、彩色标签、商品定位、价格带、价格”等高频查看字段放在前面。飞书 OpenAPI 当前不稳定支持行高持久化；如果多行标题或多行标签仍被压缩，可以在飞书表格顶部点击 `行高`，切换为较高行高后截图展示。
+- [项目案例说明](docs/case-study.md)
+- [演示脚本](docs/demo-script.md)
+- [数据安全与发布边界](docs/security-and-data-boundary.md)
+- [简历价值与写法边界](docs/resume-value.md)
+- [项目简报](docs/project-brief.md)
+- [开源参考与使用边界](docs/open-source-references.md)
 
-## 输入字段
+## 验证
 
-`samples/products.json` 是 JSON 数组，每个商品包含：
+```powershell
+python -m pytest -q --basetemp .pytest-tmp
+```
 
-- `product_id`：demo 商品 ID，用于各表之间文本关联。
-- `product_name`：商品名称。
-- `category`：商品品类。
-- `price_range`：价格带。
-- `target_user`：目标用户。
-- `core_features`：核心参数或卖点。
-- `usage_scenarios`：使用场景。
-- `platform_style`：平台列表，支持“小红书”“抖音”“电商平台”。
+当前测试覆盖：
 
-## 输出结构
+- 输入 JSON 校验
+- 商品文案生成与高风险词检测
+- 京东竞品 URL 数量校验
+- 商品页/搜索页解析 fixture
+- 台灯参数规则抽取
+- 飞书字段类型、附件、URL、单选、多选、视图过滤和隐藏字段
+- 商品工作台与竞品工作台 schema
 
-本地 JSON 会保留以下内容：
+## 项目边界
 
-- 商品基础信息。
-- 每个平台的标题候选、核心卖点、平台文案、标签。
-- 人工检查清单。
-
-飞书多维表格包含：
-
-- 商品主表：集中保存输入字段和人工检查清单。
-- 小红书内容表：偏体验分享和种草表达。
-- 抖音内容表：偏短视频口播节奏。
-- 电商平台内容表：偏清晰成交和上架说明。
-
-## 展示建议
-
-完成飞书同步后，可以在 README 或作品集中放两类截图：
-
-- 终端运行成功截图：展示一条命令完成生成和同步。
-- 飞书多维表格截图：展示商品主表和平台内容表的字段结构。
-
-当前仓库保留 `outputs/sample-generated-products.json` 作为无密钥环境下的样例输出。
-
-## 真实性边界
-
-- 不虚构真实商家、真实 GMV、真实转化率或真实上线效果。
-- 不把未完成项目写入正式简历。
-- 文案生成规则禁止主动输出销量第一、全网第一、转化率等无法证明的营销表达。
-- 飞书同步失败时，本地 JSON 会保留，便于排查。
-- v0.1 只处理用户可正常访问或已经整理好的商品数据，运行过程遵守平台访问规则。
-- v0.1 不采集评论正文，不下载商品图片，只保存公开页面中的图片 URL。
-- 真实平台采集结果只用于本地演示和飞书工作台；GitHub/作品集展示时需要脱敏或遮挡店铺名、商品名、图片和 URL。
+- 不声称真实商家使用。
+- 不声称提升转化率、GMV、销量或排名。
+- 不采集评论正文。
+- 不提交 `.env`、`.browser/`、真实飞书 `app_token`、真实采集结果或本地输出文件。
+- 台灯品类只是演示样例，项目核心是商品数据清洗、竞品分析和飞书自动化同步流程。
 
 ## 开源参考
 
@@ -220,25 +176,20 @@ python .browser/local_tools/sync_redesigned_feishu_shop_products.py --upload-ima
 - [mayashavin/product-info-ai-generator](https://github.com/mayashavin/product-info-ai-generator)
 - [iamarunbrahma/product-description-generator](https://github.com/iamarunbrahma/product-description-generator)
 
-飞书能力使用官方开放平台和 Python SDK：
+依赖能力来自官方或开源库：
 
 - [飞书/Lark 开放平台](https://open.larksuite.com/)
 - [larksuite/oapi-sdk-python](https://github.com/larksuite/oapi-sdk-python)
-
-v0.1 使用的网页解析与浏览器自动化依赖：
-
 - [Beautiful Soup](https://www.crummy.com/software/BeautifulSoup/)
 - [Playwright for Python](https://playwright.dev/python/)
 - [DrissionPage](https://www.drissionpage.cn/)
 
-## 简历草稿
-
-项目完成并可展示后，可作为草稿表达：
+## 简历表达
 
 ```text
-电商商品信息生成助手｜个人AI项目
+电商商品数据分析与飞书自动化工作台｜个人 AI 运营项目
 
-- 围绕电商商品上架和内容种草场景，设计商品信息生成流程，输入商品名称、品类、目标人群、核心参数和平台风格后，输出商品标题、核心卖点、平台口吻文案、商品标签和人工检查清单。
-- 使用 Python CLI 读取商品样例或采集清洗后的商品数据，并通过飞书 OpenAPI 自动创建多维表格，将商品基础信息、竞品对比、AI 分析结论和运营建议结构化沉淀。
-- 项目强调将分散商品数据转化为企业可查看、可筛选、可复盘的数据工作台，可迁移至电商运营、商品运营、内容运营、数据运营和 AI 赋能业务场景。
+- 围绕商品运营中的上新整理、竞品对比和运营复盘场景，设计商品数据结构化流程，将商品名称、价格带、SKU、主图、标签、店铺、链接、采集状态等字段清洗后同步至飞书多维表格。
+- 使用 Python CLI 与飞书 OpenAPI 自动创建商品工作台和竞品分析工作台，支持附件主图、URL 字段、彩色标签、筛选视图、图库视图、竞品任务表和运营建议表，提升数据查看与人工审核的可视化程度。
+- 基于同价位竞品数据生成竞品共性、主商品差异点、机会方向、标题方向和详情页优化建议，并设置人工审核清单，避免生成无法证明的销量、排名、转化率等结论。
 ```

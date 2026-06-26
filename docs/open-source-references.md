@@ -2,41 +2,69 @@
 
 ## 使用原则
 
-这些项目只能作为功能拆分、交互方式、README组织和技术选型参考。不得直接复制代码后改名包装为自己的项目。
+本项目允许参考开源项目的功能拆分、README 结构、交互方式、字段设计和技术选型，但不直接复制开源项目代码后改名包装。
 
-如确实使用任何开源代码、模板、Prompt片段或示例结构，需要：
+如确实使用任何开源代码片段、模板、Prompt 片段或示例结构，需要：
 
 - 检查许可证。
-- 在 README 中注明来源。
+- 在 README 或文档中注明来源。
 - 保留许可证要求。
-- 做场景改造和二次实现。
+- 做业务场景改造和二次实现。
 
-## 参考项目
+## 产品思路参考
 
-### 1. Nutlope/description-generator
+### Nutlope/description-generator
 
 - 链接：https://github.com/Nutlope/description-generator
-- 可参考方向：商品图生成商品描述、AI生成商品文案的交互思路。
-- 本项目借鉴方式：只参考“输入商品信息/图片后生成描述”的产品思路，不复制代码。
+- 可参考方向：商品信息生成商品描述的产品思路。
+- 本项目借鉴方式：只参考“输入商品信息后生成描述”的功能拆分，不复制代码。
 
-### 2. mayashavin/product-info-ai-generator
+### mayashavin/product-info-ai-generator
 
 - 链接：https://github.com/mayashavin/product-info-ai-generator
-- 可参考方向：从商品图片生成标题、描述、标签的输出结构。
-- 本项目借鉴方式：参考字段拆分，即标题、描述、标签，不复制代码。
+- 可参考方向：从商品信息生成标题、描述、标签的输出结构。
+- 本项目借鉴方式：参考标题、描述、标签的字段拆分，不复制代码。
 
-### 3. iamarunbrahma/product-description-generator
+### iamarunbrahma/product-description-generator
 
 - 链接：https://github.com/iamarunbrahma/product-description-generator
-- 可参考方向：面向SEO商品描述的字段设计。
-- 本项目借鉴方式：参考“SEO/标题/描述”的组织思路，不复制代码。
+- 可参考方向：面向 SEO 商品描述的字段设计。
+- 本项目借鉴方式：参考标题、描述、SEO 字段的组织思路，不复制代码。
 
-## 本项目建议差异化
+## 技术依赖参考
 
-为了避免变成普通商品描述生成器，本项目建议突出：
+### 飞书/Lark 开放平台
 
-- 平台口吻适配：小红书、抖音、电商平台三种表达。
-- 人工检查清单：避免AI生成夸大、敏感词、参数不一致。
-- 商品信息结构化：品类、目标人群、参数、使用场景、卖点。
-- 求职展示友好：README中解释业务价值、输入输出和岗位迁移能力。
+- 链接：https://open.larksuite.com/
+- 用途：多维表格 Base、数据表、字段、记录、附件和视图创建。
+- 使用方式：调用官方 OpenAPI，不复制第三方实现。
 
+### larksuite/oapi-sdk-python
+
+- 链接：https://github.com/larksuite/oapi-sdk-python
+- 用途：飞书开放平台 Python SDK。
+- 使用方式：作为依赖安装，通过官方 SDK 和 HTTP API 调用。
+
+### Beautiful Soup
+
+- 链接：https://www.crummy.com/software/BeautifulSoup/
+- 用途：HTML fixture 解析测试。
+
+### Playwright for Python
+
+- 链接：https://playwright.dev/python/
+- 用途：可选浏览器自动化能力和人工可控的数据整理流程。
+
+### DrissionPage
+
+- 链接：https://www.drissionpage.cn/
+- 用途：可选浏览器自动化能力和本地调试流程。
+
+## 本项目差异化
+
+为了避免变成普通商品描述生成器，本项目突出：
+
+- 飞书工作台：自动创建 Base、字段、记录、附件、URL、视图和筛选。
+- 商品运营视角：商品主图、价格带、商品定位、SKU 变体、标签和审核状态。
+- 竞品分析视角：竞品共性、主商品差异点、机会方向和人工审核清单。
+- 发布边界：只提交 demo 或脱敏样例，不提交真实凭证、真实运行结果和本地缓存。
