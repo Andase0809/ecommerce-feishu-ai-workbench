@@ -35,7 +35,7 @@ FEISHU_APP_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 ## 商品数据边界
 
-公开展示时应使用 demo 或脱敏数据：
+公开发布时应使用脱敏或构造数据：
 
 - 商品名可替换为“示例品牌 A 护眼台灯”。
 - 店铺名可替换为“示例照明店”。

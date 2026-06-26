@@ -213,7 +213,7 @@ def run_shop_workbench_sync(args: argparse.Namespace) -> int:
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="电商商品信息生成助手 v0")
+    parser = argparse.ArgumentParser(description="电商商品信息生成助手")
     parser.add_argument("--input", default=str(DEFAULT_INPUT), help="商品输入 JSON 路径")
     parser.add_argument("--output", default=str(DEFAULT_OUTPUT), help="本地输出 JSON 路径")
     parser.add_argument("--dry-run", default="true", help="是否只生成本地结果并预览飞书表结构")
@@ -221,7 +221,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 
 
 def parse_competitor_args(argv: list[str] | None = None) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="京东台灯竞品工作台 v0.1")
+    parser = argparse.ArgumentParser(description="京东台灯竞品工作台")
     parser.add_argument("--input", default=str(DEFAULT_COMPETITOR_INPUT), help="京东商品 URL 输入 JSON 路径")
     parser.add_argument("--output", default=str(DEFAULT_COMPETITOR_OUTPUT), help="本地竞品工作台输出 JSON 路径")
     parser.add_argument("--dry-run", default="true", help="是否只生成本地结果并预览飞书表结构")
@@ -237,7 +237,7 @@ def parse_competitor_args(argv: list[str] | None = None) -> argparse.Namespace:
 
 
 def parse_discovery_args(argv: list[str] | None = None) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="京东台灯竞品 URL 自动发现 v0.1")
+    parser = argparse.ArgumentParser(description="京东台灯竞品 URL 自动发现")
     parser.add_argument("--keyword", default="欧普照明 台灯", help="京东搜索关键词")
     parser.add_argument("--search-url", default="", help="可选：直接使用浏览器复制的京东搜索结果页完整 URL")
     parser.add_argument("--target-brand", default="欧普", help="优先作为主商品的品牌关键词")

@@ -7,7 +7,7 @@ def test_build_table_payloads_creates_main_and_platform_tables() -> None:
     output = generate_outputs(
         [
             ProductInput(
-                product_id="demo-001",
+                product_id="product-001",
                 product_name="日常通勤润色唇膏",
                 category="美妆个护",
                 price_range="59-129元",

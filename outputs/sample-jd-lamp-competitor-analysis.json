@@ -3,13 +3,13 @@
   "target": {
     "role": "target",
     "source_url": "https://item.jd.com/100000000001.html",
-    "sku_id": "demo-target-001",
+    "sku_id": "target-product-001",
     "product_name": "示例品牌A 国AA级护眼学习台灯 三档调光",
     "brand": "示例品牌A",
     "shop_name": "示例照明旗舰店",
     "price_text": "￥129.00",
     "price_range": "中价：100-199元",
-    "image_url": "https://example.com/images/demo-target-lamp.jpg",
+    "image_url": "https://example.com/images/case-target-lamp.jpg",
     "detail_params": {
       "照度": "国AA级",
       "色温": "4000K",
@@ -21,7 +21,7 @@
       "Ra95显色指数",
       "三档调光"
     ],
-    "review_count_text": "demo",
+    "review_count_text": "公开数据",
     "collected_at": "2026-06-26T18:00:00+08:00",
     "scrape_status": "成功",
     "error_message": "",
@@ -39,13 +39,13 @@
     {
       "role": "competitor",
       "source_url": "https://item.jd.com/100000000101.html",
-      "sku_id": "demo-comp-001",
+      "sku_id": "competitor-product-001",
       "product_name": "示例竞品1 护眼学习台灯 可调色温",
       "brand": "示例竞品1",
       "shop_name": "示例竞品店1",
       "price_text": "￥119.00",
       "price_range": "中价：100-199元",
-      "image_url": "https://example.com/images/demo-comp-001.jpg",
+      "image_url": "https://example.com/images/competitor-product-001.jpg",
       "detail_params": {
         "照度": "国AA级",
         "色温": "4000K",
@@ -55,7 +55,7 @@
         "国AA级照度",
         "触控调光"
       ],
-      "review_count_text": "demo",
+      "review_count_text": "公开数据",
       "collected_at": "2026-06-26T18:00:00+08:00",
       "scrape_status": "成功",
       "error_message": "",
@@ -72,13 +72,13 @@
     {
       "role": "competitor",
       "source_url": "https://item.jd.com/100000000102.html",
-      "sku_id": "demo-comp-002",
+      "sku_id": "competitor-product-002",
       "product_name": "示例竞品2 儿童学习台灯 多档调光",
       "brand": "示例竞品2",
       "shop_name": "示例竞品店2",
       "price_text": "￥159.00",
       "price_range": "中价：100-199元",
-      "image_url": "https://example.com/images/demo-comp-002.jpg",
+      "image_url": "https://example.com/images/competitor-product-002.jpg",
       "detail_params": {
         "照度": "国AA级",
         "色温": "可调色温",
@@ -88,7 +88,7 @@
         "多档调光",
         "儿童学习场景"
       ],
-      "review_count_text": "demo",
+      "review_count_text": "公开数据",
       "collected_at": "2026-06-26T18:00:00+08:00",
       "scrape_status": "成功",
       "error_message": "",
@@ -105,13 +105,13 @@
     {
       "role": "competitor",
       "source_url": "https://item.jd.com/100000000103.html",
-      "sku_id": "demo-comp-003",
+      "sku_id": "competitor-product-003",
       "product_name": "示例竞品3 桌面阅读台灯 无极调光",
       "brand": "示例竞品3",
       "shop_name": "示例竞品店3",
       "price_text": "￥99.00",
       "price_range": "低价：100元以下",
-      "image_url": "https://example.com/images/demo-comp-003.jpg",
+      "image_url": "https://example.com/images/competitor-product-003.jpg",
       "detail_params": {
         "照度": "A级",
         "调光": "无极调光"
@@ -120,7 +120,7 @@
         "桌面阅读",
         "无极调光"
       ],
-      "review_count_text": "demo",
+      "review_count_text": "公开数据",
       "collected_at": "2026-06-26T18:00:00+08:00",
       "scrape_status": "成功",
       "error_message": "",
@@ -137,7 +137,7 @@
   ],
   "analysis": {
     "keyword": "台灯",
-    "target_sku_id": "demo-target-001",
+    "target_sku_id": "target-product-001",
     "competitor_count": 3,
     "opportunity_level": "中",
     "common_patterns": [

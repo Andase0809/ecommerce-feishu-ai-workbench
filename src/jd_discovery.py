@@ -137,7 +137,7 @@ def discover_competitor_input_from_items(
     competitor_count: int = 10,
 ) -> CompetitorInput:
     if competitor_count != 10:
-        raise ValueError("v0.1 expects exactly 10 competitors")
+        raise ValueError("competitor discovery expects exactly 10 competitors")
     usable = [item for item in items if item.price is not None]
     if not usable:
         raise ValueError("未在搜索结果中识别到带价格的京东商品")

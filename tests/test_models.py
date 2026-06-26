@@ -12,7 +12,7 @@ def test_load_products_from_json_array(tmp_path) -> None:
         json.dumps(
             [
                 {
-                    "product_id": "demo-001",
+                    "product_id": "product-001",
                     "product_name": "桌面分区收纳盒",
                     "category": "家居小物",
                     "price_range": "39-79元",
@@ -29,7 +29,7 @@ def test_load_products_from_json_array(tmp_path) -> None:
 
     products = load_products(path)
 
-    assert products[0].product_id == "demo-001"
+    assert products[0].product_id == "product-001"
     assert products[0].core_features == ["多格分区"]
 
 
@@ -47,7 +47,7 @@ def test_product_rejects_unknown_platform(tmp_path) -> None:
         json.dumps(
             [
                 {
-                    "product_id": "demo-001",
+                    "product_id": "product-001",
                     "product_name": "桌面分区收纳盒",
                     "category": "家居小物",
                     "price_range": "39-79元",

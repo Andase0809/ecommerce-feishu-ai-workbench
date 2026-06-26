@@ -1,6 +1,6 @@
 [
   {
-    "product_id": "demo-light-001",
+    "product_id": "product-light-001",
     "product_name": "便携式桌面补光灯",
     "category": "数码配件",
     "price_range": "99-199元",
@@ -10,7 +10,7 @@
     "platform_style": ["小红书", "抖音", "电商平台"]
   },
   {
-    "product_id": "demo-storage-002",
+    "product_id": "product-storage-002",
     "product_name": "桌面分区收纳盒",
     "category": "家居小物",
     "price_range": "39-79元",
@@ -20,7 +20,7 @@
     "platform_style": ["小红书", "抖音", "电商平台"]
   },
   {
-    "product_id": "demo-lipstick-003",
+    "product_id": "product-lipstick-003",
     "product_name": "日常通勤润色唇膏",
     "category": "美妆个护",
     "price_range": "59-129元",

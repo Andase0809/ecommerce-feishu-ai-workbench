@@ -81,7 +81,7 @@ def test_parse_discovery_args_accepts_listen_mode() -> None:
     assert args.listen_count == "4"
 
 
-def test_parse_shop_workbench_args_defaults_to_demo_input() -> None:
+def test_parse_shop_workbench_args_defaults_to_sample_input() -> None:
     args = parse_shop_workbench_args([])
 
     assert args.input == "samples\\shop-workbench.example.json" or args.input == "samples/shop-workbench.example.json"

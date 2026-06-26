@@ -4,7 +4,7 @@ from src.models import ProductInput
 
 def _product() -> ProductInput:
     return ProductInput(
-        product_id="demo-001",
+        product_id="product-001",
         product_name="便携式桌面补光灯",
         category="数码配件",
         price_range="99-199元",
