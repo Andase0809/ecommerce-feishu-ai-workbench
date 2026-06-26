@@ -96,18 +96,6 @@ FEISHU_APP_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 python -m src.main sync-shop-workbench --input samples/shop-workbench.example.json --dry-run false --upload-images true
 ```
 
-## 展示截图建议
-
-公开作品集或 GitHub 展示建议放 3-5 张脱敏截图：
-
-- 商品工作台：展示商品识别卡片、主图附件、彩色标签、价格带和商品定位。
-- 商品图库视图：展示飞书画册视图的商品图片。
-- 竞品工作台：展示本店商品和 10 个竞品的卡片化对比。
-- 竞品分析表：展示共性、差异点、机会方向和人工审核清单。
-- 终端运行截图：展示一条命令完成表格创建和同步。
-
-> 注意：截图中如包含真实商品名、店铺名、图片或 URL，发布前应脱敏或遮挡。
-
 ## 目录结构
 
 ```text
@@ -130,17 +118,13 @@ docs/
   project-brief.md
   open-source-references.md
   case-study.md
-  demo-script.md
-  resume-value.md
   security-and-data-boundary.md
 ```
 
 ## 扩展文档
 
 - [项目案例说明](docs/case-study.md)
-- [演示脚本](docs/demo-script.md)
 - [数据安全与发布边界](docs/security-and-data-boundary.md)
-- [简历价值与写法边界](docs/resume-value.md)
 - [项目简报](docs/project-brief.md)
 - [开源参考与使用边界](docs/open-source-references.md)
 
@@ -183,13 +167,3 @@ python -m pytest -q --basetemp .pytest-tmp
 - [Beautiful Soup](https://www.crummy.com/software/BeautifulSoup/)
 - [Playwright for Python](https://playwright.dev/python/)
 - [DrissionPage](https://www.drissionpage.cn/)
-
-## 简历表达
-
-```text
-电商商品数据分析与飞书自动化工作台｜个人 AI 运营项目
-
-- 围绕商品运营中的上新整理、竞品对比和运营复盘场景，设计商品数据结构化流程，将商品名称、价格带、SKU、主图、标签、店铺、链接、采集状态等字段清洗后同步至飞书多维表格。
-- 使用 Python CLI 与飞书 OpenAPI 自动创建商品工作台和竞品分析工作台，支持附件主图、URL 字段、彩色标签、筛选视图、图库视图、竞品任务表和运营建议表，提升数据查看与人工审核的可视化程度。
-- 基于同价位竞品数据生成竞品共性、主商品差异点、机会方向、标题方向和详情页优化建议，并设置人工审核清单，避免生成无法证明的销量、排名、转化率等结论。
-```
