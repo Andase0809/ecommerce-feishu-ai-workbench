@@ -83,6 +83,13 @@ def _product_fields() -> list[dict]:
         _text_field("目标用户"),
         _text_field("核心卖点"),
         _text_field("使用场景"),
+        _text_field("AI分类建议"),
+        _text_field("AI商品定位"),
+        _text_field("AI标签建议"),
+        _text_field("AI运营建议"),
+        _text_field("AI审核提示"),
+        _text_field("AI生成状态"),
+        _text_field("AI模型"),
         _text_field("人工检查清单"),
     ]
 
@@ -112,6 +119,7 @@ def _single_select_field(name: str, options: list[str]) -> dict:
 
 
 def _product_record(output: ProductOutput) -> dict:
+    ai = output.ai_insight
     return {
         "fields": {
             "product_id": output.product_id,
@@ -121,6 +129,13 @@ def _product_record(output: ProductOutput) -> dict:
             "目标用户": output.target_user,
             "核心卖点": "\n".join(output.core_features),
             "使用场景": "\n".join(output.usage_scenarios),
+            "AI分类建议": ai.category_suggestion if ai else "",
+            "AI商品定位": ai.product_positioning if ai else "",
+            "AI标签建议": "，".join(ai.suggested_tags) if ai else "",
+            "AI运营建议": "\n".join(ai.operation_suggestions) if ai else "",
+            "AI审核提示": "\n".join(ai.review_notes) if ai else "",
+            "AI生成状态": ai.status if ai else "未启用",
+            "AI模型": f"{ai.provider}/{ai.model}" if ai and ai.provider else "",
             "人工检查清单": "\n".join(output.review_checklist),
         }
     }

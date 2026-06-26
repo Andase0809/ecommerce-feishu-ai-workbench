@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from .ai_client import AIClient, failed_product_insight
 from .models import PlatformContent, ProductInput, ProductOutput
 
 
@@ -26,11 +27,17 @@ FORBIDDEN_MARKETING_TERMS = [
 ]
 
 
-def generate_product_output(product: ProductInput) -> ProductOutput:
+def generate_product_output(product: ProductInput, ai_client: AIClient | None = None) -> ProductOutput:
     platform_contents = [
         _generate_platform_content(product, platform)
         for platform in product.platform_style
     ]
+    ai_insight = None
+    if ai_client is not None:
+        try:
+            ai_insight = ai_client.generate_product_insight(product)
+        except Exception as exc:  # noqa: BLE001 - AI fallback should preserve deterministic output.
+            ai_insight = failed_product_insight(ai_client.config, exc)
     return ProductOutput(
         product_id=product.product_id,
         product_name=product.product_name,
@@ -41,11 +48,12 @@ def generate_product_output(product: ProductInput) -> ProductOutput:
         usage_scenarios=product.usage_scenarios,
         platform_contents=platform_contents,
         review_checklist=REVIEW_CHECKLIST,
+        ai_insight=ai_insight,
     )
 
 
-def generate_outputs(products: list[ProductInput]) -> list[ProductOutput]:
-    return [generate_product_output(product) for product in products]
+def generate_outputs(products: list[ProductInput], ai_client: AIClient | None = None) -> list[ProductOutput]:
+    return [generate_product_output(product, ai_client=ai_client) for product in products]
 
 
 def _generate_platform_content(product: ProductInput, platform: str) -> PlatformContent:
@@ -155,5 +163,11 @@ def find_forbidden_terms(outputs: list[ProductOutput]) -> list[str]:
             generated_text_parts.extend(content.selling_points)
             generated_text_parts.append(content.platform_copy)
             generated_text_parts.extend(content.tags)
+        if output.ai_insight is not None:
+            generated_text_parts.append(output.ai_insight.category_suggestion)
+            generated_text_parts.append(output.ai_insight.product_positioning)
+            generated_text_parts.extend(output.ai_insight.suggested_tags)
+            generated_text_parts.extend(output.ai_insight.operation_suggestions)
+            generated_text_parts.extend(output.ai_insight.review_notes)
     text = "\n".join(generated_text_parts)
     return [term for term in FORBIDDEN_MARKETING_TERMS if term in text]

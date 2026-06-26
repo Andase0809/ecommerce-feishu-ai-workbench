@@ -9,6 +9,8 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
+from .ai_client import AIClient, AIConfig, AIConfigError
+from .ai_enrichment import enrich_shop_workbench_payload
 from .browser_config import resolve_browser_path
 from .competitor_analysis import analyze_workbench, find_forbidden_terms_in_workbench
 from .competitor_models import load_competitor_input, save_workbench_output
@@ -51,9 +53,10 @@ def run_content_generation(args: argparse.Namespace) -> int:
     input_path = Path(args.input)
     output_path = Path(args.output)
     dry_run = _parse_bool(args.dry_run)
+    ai_client = _build_ai_client(args)
 
     products = load_products(input_path)
-    outputs = generate_outputs(products)
+    outputs = generate_outputs(products, ai_client=ai_client)
     save_outputs(output_path, outputs)
 
     forbidden_terms = find_forbidden_terms(outputs)
@@ -89,6 +92,7 @@ def run_competitor_analysis(args: argparse.Namespace) -> int:
     dry_run = _parse_bool(args.dry_run)
     headful = _parse_bool(args.headful)
     browser_path = _resolve_browser_path_for_cli(args)
+    ai_client = _build_ai_client(args)
 
     competitor_input = load_competitor_input(input_path)
     target, competitors = scrape_jd_snapshots(
@@ -101,7 +105,7 @@ def run_competitor_analysis(args: argparse.Namespace) -> int:
         manual_wait_seconds=float(args.manual_wait_seconds),
         browser_backend=args.browser_backend,
     )
-    workbench = analyze_workbench(competitor_input.keyword, target, competitors)
+    workbench = analyze_workbench(competitor_input.keyword, target, competitors, ai_client=ai_client)
     save_workbench_output(output_path, workbench)
 
     forbidden_terms = find_forbidden_terms_in_workbench(workbench)
@@ -180,6 +184,9 @@ def run_shop_workbench_sync(args: argparse.Namespace) -> int:
     dry_run = _parse_bool(args.dry_run)
     upload_images = _parse_bool(args.upload_images)
     payload = load_shop_workbench_payload(input_path)
+    ai_client = _build_ai_client(args)
+    if ai_client is not None:
+        payload = enrich_shop_workbench_payload(payload, ai_client)
     table_payloads = build_shop_workbench_table_payloads(payload)
     base_name = args.base_name or f"{redesigned_base_name(payload)}-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
 
@@ -217,6 +224,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--input", default=str(DEFAULT_INPUT), help="商品输入 JSON 路径")
     parser.add_argument("--output", default=str(DEFAULT_OUTPUT), help="本地输出 JSON 路径")
     parser.add_argument("--dry-run", default="true", help="是否只生成本地结果并预览飞书表结构")
+    _add_ai_args(parser)
     return parser.parse_args(argv)
 
 
@@ -233,6 +241,7 @@ def parse_competitor_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--browser-backend", default="drissionpage", choices=["drissionpage", "playwright"], help="浏览器自动化后端")
     parser.add_argument("--browser", default="auto", choices=["auto", "chrome", "edge"], help="自动选择本机浏览器")
     parser.add_argument("--browser-path", default="", help="可选：显式指定浏览器可执行文件路径")
+    _add_ai_args(parser)
     return parser.parse_args(argv)
 
 
@@ -265,7 +274,14 @@ def parse_shop_workbench_args(argv: list[str] | None = None) -> argparse.Namespa
     parser.add_argument("--dry-run", default="true", help="是否只预览表结构、视图和图片上传计划")
     parser.add_argument("--upload-images", default="true", help="是否将公开图片临时上传为飞书附件字段")
     parser.add_argument("--base-name", default="", help="可选：指定新建飞书 Base 名称")
+    _add_ai_args(parser)
     return parser.parse_args(argv)
+
+
+def _add_ai_args(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--ai-provider", default="", help="可选 AI 辅助：off/openai/deepseek/custom")
+    parser.add_argument("--ai-model", default="", help="可选：覆盖 AI_MODEL")
+    parser.add_argument("--ai-base-url", default="", help="可选：覆盖 AI_BASE_URL，custom provider 必填")
 
 
 def _parse_bool(value: str | bool) -> bool:
@@ -304,6 +320,21 @@ def _preview(table_payloads: list) -> list[dict]:
         }
         for payload in table_payloads
     ]
+
+
+def _build_ai_client(args: argparse.Namespace) -> AIClient | None:
+    try:
+        config = AIConfig.from_env(
+            provider=getattr(args, "ai_provider", "off"),
+            model=getattr(args, "ai_model", ""),
+            base_url=getattr(args, "ai_base_url", ""),
+        )
+    except AIConfigError as exc:
+        raise SystemExit(str(exc)) from exc
+    if not config.enabled:
+        return None
+    print(f"AI辅助已启用：{config.provider} / {config.model}")
+    return AIClient(config)
 
 
 def _resolve_browser_path_for_cli(args: argparse.Namespace) -> str | None:

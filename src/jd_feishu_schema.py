@@ -125,6 +125,12 @@ def _analysis_fields() -> list[dict]:
         _text_field("竞品共性"),
         _text_field("主商品差异点"),
         _text_field("机会方向"),
+        _text_field("AI分类建议"),
+        _text_field("AI运营建议"),
+        _text_field("AI内容角度"),
+        _text_field("AI审核提示"),
+        _text_field("AI生成状态"),
+        _text_field("AI模型"),
         _text_field("风险提醒"),
         _text_field("人工审核清单"),
     ]
@@ -176,6 +182,7 @@ def _product_record(
 
 def _analysis_record(workbench: CompetitorWorkbenchOutput) -> dict:
     analysis = workbench.analysis
+    ai = analysis.ai_insight
     return {
         "fields": {
             "关键词": analysis.keyword,
@@ -185,6 +192,12 @@ def _analysis_record(workbench: CompetitorWorkbenchOutput) -> dict:
             "竞品共性": "\n".join(analysis.common_patterns),
             "主商品差异点": "\n".join(analysis.target_differentiators),
             "机会方向": "\n".join(analysis.opportunities),
+            "AI分类建议": "\n".join(ai.category_suggestions) if ai else "",
+            "AI运营建议": "\n".join(ai.operation_suggestions) if ai else "",
+            "AI内容角度": "\n".join(ai.content_angles) if ai else "",
+            "AI审核提示": "\n".join(ai.review_notes) if ai else "",
+            "AI生成状态": ai.status if ai else "未启用",
+            "AI模型": f"{ai.provider}/{ai.model}" if ai and ai.provider else "",
             "风险提醒": "\n".join(analysis.risks),
             "人工审核清单": "\n".join(analysis.review_checklist),
         }
@@ -198,6 +211,13 @@ def _suggestion_records(workbench: CompetitorWorkbenchOutput) -> list[dict]:
         ("详情页方向", analysis.detail_page_directions),
         ("平台内容方向", analysis.platform_content_directions),
     ]
+    if analysis.ai_insight is not None:
+        groups.extend(
+            [
+                ("AI运营建议", analysis.ai_insight.operation_suggestions),
+                ("AI内容角度", analysis.ai_insight.content_angles),
+            ]
+        )
     return [
         {
             "fields": {

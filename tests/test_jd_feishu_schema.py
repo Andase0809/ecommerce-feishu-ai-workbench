@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from src.competitor_analysis import analyze_workbench
-from src.competitor_models import JdProductSnapshot, LampAttributes
+from src.competitor_models import AICompetitorInsight, JdProductSnapshot, LampAttributes
 from src.jd_feishu_schema import (
     ANALYSIS_TABLE_NAME,
     COMPETITOR_TABLE_NAME,
@@ -59,3 +59,26 @@ def test_build_competitor_table_payloads_creates_four_workbench_tables() -> None
     assert payloads[1].views[1].name == "竞品图库"
     assert "主图URL" in payloads[1].views[0].hidden_fields
     assert payloads[2].records[0]["fields"]["机会层级"] in {"高", "中", "低"}
+
+
+def test_competitor_analysis_table_includes_ai_insight_fields() -> None:
+    target = _snapshot("100000000001", "target")
+    competitors = [_snapshot(f"1000000000{index:02d}", "competitor") for index in range(2, 12)]
+    workbench = analyze_workbench("台灯", target, competitors)
+    workbench.analysis.ai_insight = AICompetitorInsight(
+        provider="openai",
+        model="test-model",
+        status="成功",
+        category_suggestions=["学习护眼台灯"],
+        operation_suggestions=["补齐防蓝光参数"],
+        content_angles=["学习桌面场景"],
+        review_notes=["核对参数来源"],
+    )
+
+    analysis_table = build_competitor_table_payloads(workbench)[2]
+    fields = [field["field_name"] for field in analysis_table.fields]
+    record = analysis_table.records[0]["fields"]
+
+    assert "AI运营建议" in fields
+    assert record["AI分类建议"] == "学习护眼台灯"
+    assert record["AI模型"] == "openai/test-model"

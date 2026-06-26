@@ -38,6 +38,18 @@ class PlatformContent(BaseModel):
     review_status: str = "待审核"
 
 
+class AIProductInsight(BaseModel):
+    provider: str = ""
+    model: str = ""
+    status: str = "未启用"
+    category_suggestion: str = ""
+    product_positioning: str = ""
+    suggested_tags: list[str] = Field(default_factory=list)
+    operation_suggestions: list[str] = Field(default_factory=list)
+    review_notes: list[str] = Field(default_factory=list)
+    error_message: str = ""
+
+
 class ProductOutput(BaseModel):
     product_id: str
     product_name: str
@@ -48,6 +60,7 @@ class ProductOutput(BaseModel):
     usage_scenarios: list[str]
     platform_contents: list[PlatformContent]
     review_checklist: list[str]
+    ai_insight: AIProductInsight | None = None
 
 
 def load_products(path: Path) -> list[ProductInput]:
@@ -59,5 +72,5 @@ def load_products(path: Path) -> list[ProductInput]:
 
 def save_outputs(path: Path, outputs: list[ProductOutput]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    payload = [item.model_dump(mode="json") for item in outputs]
+    payload = [item.model_dump(mode="json", exclude_none=True) for item in outputs]
     path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")

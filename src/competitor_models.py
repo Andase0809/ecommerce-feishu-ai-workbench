@@ -70,6 +70,17 @@ class JdProductSnapshot(BaseModel):
     lamp_attributes: LampAttributes = Field(default_factory=LampAttributes)
 
 
+class AICompetitorInsight(BaseModel):
+    provider: str = ""
+    model: str = ""
+    status: str = "未启用"
+    category_suggestions: list[str] = Field(default_factory=list)
+    operation_suggestions: list[str] = Field(default_factory=list)
+    content_angles: list[str] = Field(default_factory=list)
+    review_notes: list[str] = Field(default_factory=list)
+    error_message: str = ""
+
+
 class CompetitorAnalysis(BaseModel):
     keyword: str
     target_sku_id: str
@@ -83,6 +94,7 @@ class CompetitorAnalysis(BaseModel):
     detail_page_directions: list[str] = Field(default_factory=list)
     platform_content_directions: list[str] = Field(default_factory=list)
     review_checklist: list[str] = Field(default_factory=list)
+    ai_insight: AICompetitorInsight | None = None
 
 
 class CompetitorWorkbenchOutput(BaseModel):

@@ -1,7 +1,8 @@
 from datetime import datetime
 
+from src.ai_client import AIConfig
 from src.competitor_analysis import analyze_workbench, find_forbidden_terms_in_workbench
-from src.competitor_models import JdProductSnapshot, LampAttributes
+from src.competitor_models import AICompetitorInsight, CompetitorAnalysis, JdProductSnapshot, LampAttributes
 
 
 def _snapshot(sku_id: str, role: str, attrs: LampAttributes) -> JdProductSnapshot:
@@ -53,3 +54,33 @@ def test_analyze_workbench_outputs_qualitative_analysis_without_forbidden_terms(
     assert workbench.analysis.opportunities
     assert workbench.analysis.title_directions
     assert find_forbidden_terms_in_workbench(workbench) == []
+
+
+def test_analyze_workbench_can_attach_ai_competitor_insight() -> None:
+    class FakeAIClient:
+        config = AIConfig(provider="openai", api_key="test-key", model="test-model", base_url="https://api.test")
+
+        def generate_competitor_insight(
+            self,
+            keyword: str,
+            target: JdProductSnapshot,
+            competitors: list[JdProductSnapshot],
+            analysis: CompetitorAnalysis,
+        ) -> AICompetitorInsight:
+            return AICompetitorInsight(
+                provider="openai",
+                model="test-model",
+                status="成功",
+                category_suggestions=[f"{keyword}中价位学习场景"],
+                operation_suggestions=["补齐主商品防蓝光参数"],
+                content_angles=["学习桌面布光对比"],
+                review_notes=["人工核对护眼参数"],
+            )
+
+    target = _snapshot("100000000001", "target", LampAttributes(illuminance="国AA级"))
+    competitors = [_snapshot(f"1000000000{index:02d}", "competitor", LampAttributes(illuminance="国AA级")) for index in range(2, 12)]
+
+    workbench = analyze_workbench("台灯", target, competitors, ai_client=FakeAIClient())
+
+    assert workbench.analysis.ai_insight is not None
+    assert workbench.analysis.ai_insight.operation_suggestions == ["补齐主商品防蓝光参数"]

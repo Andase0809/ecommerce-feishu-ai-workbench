@@ -1,4 +1,4 @@
-from src.main import parse_competitor_args, parse_discovery_args, parse_shop_workbench_args
+from src.main import parse_args, parse_competitor_args, parse_discovery_args, parse_shop_workbench_args
 
 
 def test_parse_competitor_args_defaults_to_local_url_file() -> None:
@@ -33,6 +33,13 @@ def test_parse_competitor_args_accepts_explicit_values() -> None:
     assert args.dry_run == "false"
     assert args.headful == "false"
     assert args.wait_seconds == "0"
+
+
+def test_parse_content_generation_accepts_ai_options() -> None:
+    args = parse_args(["--ai-provider", "deepseek", "--ai-model", "deepseek-chat"])
+
+    assert args.ai_provider == "deepseek"
+    assert args.ai_model == "deepseek-chat"
 
 
 def test_parse_discovery_args_defaults_to_opple_lamp_price_band() -> None:
@@ -101,6 +108,10 @@ def test_parse_shop_workbench_args_accepts_visual_sync_options() -> None:
             "false",
             "--base-name",
             "重设计测试",
+            "--ai-provider",
+            "openai",
+            "--ai-model",
+            "test-model",
         ]
     )
 
@@ -108,3 +119,5 @@ def test_parse_shop_workbench_args_accepts_visual_sync_options() -> None:
     assert args.dry_run == "false"
     assert args.upload_images == "false"
     assert args.base_name == "重设计测试"
+    assert args.ai_provider == "openai"
+    assert args.ai_model == "test-model"

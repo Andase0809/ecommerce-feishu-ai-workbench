@@ -173,6 +173,13 @@ def _product_payload(products: list[dict[str, Any]]) -> TablePayload:
             _number_field("关联变体数", "0"),
             _single_select_field("竞品分析状态", COMPETITOR_STATUS_OPTIONS),
             _single_select_field("审核状态", REVIEW_STATUS_OPTIONS),
+            _text_field("AI分类建议"),
+            _text_field("AI定位建议"),
+            _text_field("AI标签建议"),
+            _text_field("AI运营建议"),
+            _text_field("AI审核提示"),
+            _text_field("AI生成状态"),
+            _text_field("AI模型"),
             _text_field("店铺商品SKU"),
             _text_field("商品名称"),
             _text_field("价格文本"),
@@ -293,19 +300,22 @@ def _competitor_task_payload(products: list[dict[str, Any]]) -> TablePayload:
 
 def _suggestion_payload(payload: dict[str, Any]) -> TablePayload:
     generated_at = str(payload.get("generated_at") or "")
-    records = [
-        {
-            "fields": {
-                "建议类型": label,
-                "建议内容": "等待竞品数据采集和人工确认后生成",
-                "依据数据": f"当前仅有店铺商品与SKU变体数据；payload生成时间：{generated_at}",
-                "优先级": "待定",
-                "竞品分析状态": "竞品未采集",
-                "审核状态": "待审核",
+    products = _records_for_table(payload, PRODUCT_TABLE_SOURCE_NAME)
+    records = _ai_suggestion_records(products)
+    if not records:
+        records = [
+            {
+                "fields": {
+                    "建议类型": label,
+                    "建议内容": "等待竞品数据采集和人工确认后生成",
+                    "依据数据": f"当前仅有店铺商品与SKU变体数据；payload生成时间：{generated_at}",
+                    "优先级": "待定",
+                    "竞品分析状态": "竞品未采集",
+                    "审核状态": "待审核",
+                }
             }
-        }
-        for label in ["标题方向", "详情页方向", "平台内容方向"]
-    ]
+            for label in ["标题方向", "详情页方向", "平台内容方向"]
+        ]
     return TablePayload(
         name=SUGGESTION_TABLE_NAME,
         default_view_name="待生成建议",
@@ -377,6 +387,13 @@ def _product_record(product: dict[str, Any]) -> dict[str, dict[str, Any]]:
             "关联变体数": _number_or_zero(product.get("关联变体数")),
             "竞品分析状态": str(product.get("竞品分析状态") or "竞品未采集"),
             "审核状态": str(product.get("审核状态") or "待审核"),
+            "AI分类建议": str(product.get("AI分类建议", "")),
+            "AI定位建议": str(product.get("AI定位建议", "")),
+            "AI标签建议": str(product.get("AI标签建议", "")),
+            "AI运营建议": str(product.get("AI运营建议", "")),
+            "AI审核提示": str(product.get("AI审核提示", "")),
+            "AI生成状态": str(product.get("AI生成状态") or "未启用"),
+            "AI模型": str(product.get("AI模型", "")),
             "图片上传状态": "待上传" if image_url else "无图片URL",
             "店铺列表来源": _url_value("查看来源", product.get("店铺列表来源")),
             "备注": str(product.get("备注", "")),
@@ -412,6 +429,30 @@ def _variant_record(variant: dict[str, Any]) -> dict[str, dict[str, Any]]:
 
 def _variant_image_url(variant: dict[str, Any]) -> str:
     return str(variant.get("款式小图") or variant.get("变体详情主图") or variant.get("店铺展示主图") or "")
+
+
+def _ai_suggestion_records(products: list[dict[str, Any]]) -> list[dict[str, dict[str, Any]]]:
+    records: list[dict[str, dict[str, Any]]] = []
+    for product in products:
+        suggestions = _lines(product.get("AI运营建议"))
+        if not suggestions:
+            continue
+        sku = str(product.get("店铺商品SKU") or "")
+        name = str(product.get("商品名称") or "")
+        for suggestion in suggestions:
+            records.append(
+                {
+                    "fields": {
+                        "建议类型": "AI运营建议",
+                        "建议内容": suggestion,
+                        "依据数据": f"{sku} / {name}".strip(" /"),
+                        "优先级": "中",
+                        "竞品分析状态": str(product.get("竞品分析状态") or "竞品未采集"),
+                        "审核状态": "待审核",
+                    }
+                }
+            )
+    return records
 
 
 def _product_identity_card(product: dict[str, Any]) -> str:
@@ -509,6 +550,18 @@ def _split_tags(value: Any) -> list[str]:
     if isinstance(value, list):
         return _unique_strings([str(item) for item in value])
     return _unique_strings([item for item in re.split(r"[、,，\s]+", str(value or "")) if item])
+
+
+def _lines(value: Any) -> list[str]:
+    if isinstance(value, list):
+        raw_items = [str(item).strip() for item in value]
+    else:
+        raw_items = [item.strip() for item in str(value or "").splitlines()]
+    result: list[str] = []
+    for item in raw_items:
+        if item and item not in result:
+            result.append(item)
+    return result
 
 
 def _tags_summary(value: Any, per_line: int = 3) -> str:

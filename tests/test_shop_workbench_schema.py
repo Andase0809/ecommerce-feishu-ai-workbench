@@ -111,7 +111,18 @@ def test_product_table_uses_visual_field_types_and_record_values() -> None:
     assert record["商品链接"] == {"text": "打开商品", "link": "https://item.jd.com/100026582726.html"}
     assert record["价格数值"] == 17.47
     assert record["标签"] == ["4000K", "酷毙灯", "磁吸", "宿舍"]
+    assert "AI分类建议" in fields
     assert len(product_table.attachment_uploads) == 1
+
+
+def test_suggestion_table_uses_ai_suggestions_when_present() -> None:
+    payload = _payload()
+    payload["tables"][0]["records"][0]["AI运营建议"] = "补齐护眼参数\n按宿舍场景拆分标题"
+
+    suggestion_table = build_shop_workbench_table_payloads(payload)[4]
+    suggestions = [record["fields"]["建议内容"] for record in suggestion_table.records]
+
+    assert suggestions == ["补齐护眼参数", "按宿舍场景拆分标题"]
 
 
 def test_product_identity_and_tags_are_multiline_for_readability() -> None:

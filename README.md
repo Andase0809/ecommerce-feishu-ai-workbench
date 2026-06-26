@@ -77,6 +77,34 @@ pip install -r requirements.txt
 python -m pytest -q
 ```
 
+## AI API 接入
+
+项目默认不调用外部 AI API。需要启用 AI 分类和运营建议时，在 `.env` 中配置：
+
+```text
+AI_PROVIDER=deepseek
+AI_API_KEY=你的 API Key
+AI_MODEL=deepseek-chat
+```
+
+也可以使用 OpenAI 或兼容接口：
+
+```text
+AI_PROVIDER=openai
+AI_API_KEY=你的 API Key
+AI_MODEL=gpt-4o-mini
+```
+
+自定义兼容接口需要补充 `AI_BASE_URL`。启用后可在命令中指定：
+
+```powershell
+python -m src.main --input samples/products.json --dry-run true --ai-provider deepseek
+python -m src.main sync-shop-workbench --input samples/shop-workbench.example.json --dry-run true --ai-provider deepseek
+python -m src.main analyze-competitors --input samples/jd-lamp-urls.example.json --dry-run true --ai-provider deepseek
+```
+
+AI 输出会写入分类建议、商品定位、标签建议、运营建议、审核提示和生成状态字段。若 API 调用失败，程序保留规则化结果并记录失败原因。
+
 如需同步到飞书：
 
 1. 在飞书开放平台创建企业自建应用。

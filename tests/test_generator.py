@@ -1,5 +1,6 @@
 from src.generator import find_forbidden_terms, generate_outputs
-from src.models import ProductInput
+from src.ai_client import AIConfig
+from src.models import AIProductInsight, ProductInput
 
 
 def _product() -> ProductInput:
@@ -37,3 +38,26 @@ def test_generated_outputs_do_not_include_forbidden_terms() -> None:
     outputs = generate_outputs([_product()])
 
     assert find_forbidden_terms(outputs) == []
+
+
+def test_generate_outputs_can_attach_ai_product_insight() -> None:
+    class FakeAIClient:
+        config = AIConfig(provider="deepseek", api_key="test-key", model="deepseek-chat", base_url="https://api.test")
+
+        def generate_product_insight(self, product: ProductInput) -> AIProductInsight:
+            return AIProductInsight(
+                provider="deepseek",
+                model="deepseek-chat",
+                status="成功",
+                category_suggestion="桌面照明",
+                product_positioning=f"{product.price_range}内容创作补光",
+                suggested_tags=["补光", "桌面"],
+                operation_suggestions=["按使用场景拆分标题"],
+                review_notes=["核对功率参数"],
+            )
+
+    output = generate_outputs([_product()], ai_client=FakeAIClient())[0]
+
+    assert output.ai_insight is not None
+    assert output.ai_insight.category_suggestion == "桌面照明"
+    assert output.ai_insight.operation_suggestions == ["按使用场景拆分标题"]

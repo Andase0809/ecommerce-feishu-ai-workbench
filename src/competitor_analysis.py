@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections import Counter
 
+from .ai_client import AIClient, failed_competitor_insight
 from .competitor_models import (
     CompetitorAnalysis,
     CompetitorWorkbenchOutput,
@@ -14,7 +15,7 @@ REVIEW_CHECKLIST = [
     "核对本店商品与竞品URL是否来自公开页面，避免混入非台灯商品",
     "检查价格、评价量、促销信息是否为采集时页面可见内容，不做长期承诺",
     "检查是否出现销量、排名、转化率、GMV等无法证明的表达",
-    "对主图、店铺名、商品名等公开信息做作品集展示脱敏",
+    "对主图、店铺名、商品名等公开信息在发布前做脱敏处理",
     "发布前由人工复核护眼、防蓝光、照度等参数是否与详情页一致",
 ]
 
@@ -23,6 +24,7 @@ def analyze_workbench(
     keyword: str,
     target: JdProductSnapshot,
     competitors: list[JdProductSnapshot],
+    ai_client: AIClient | None = None,
 ) -> CompetitorWorkbenchOutput:
     successful_competitors = [item for item in competitors if item.scrape_status == "成功"]
     common_patterns = _common_patterns(successful_competitors)
@@ -44,6 +46,16 @@ def analyze_workbench(
         platform_content_directions=_platform_content_directions(target),
         review_checklist=REVIEW_CHECKLIST,
     )
+    if ai_client is not None:
+        try:
+            analysis.ai_insight = ai_client.generate_competitor_insight(
+                keyword,
+                target,
+                successful_competitors,
+                analysis,
+            )
+        except Exception as exc:  # noqa: BLE001 - AI fallback should preserve deterministic analysis.
+            analysis.ai_insight = failed_competitor_insight(ai_client.config, exc)
     return CompetitorWorkbenchOutput(
         keyword=keyword,
         target=target,
@@ -62,6 +74,11 @@ def find_forbidden_terms_in_workbench(workbench: CompetitorWorkbenchOutput) -> l
     parts.extend(analysis.title_directions)
     parts.extend(analysis.detail_page_directions)
     parts.extend(analysis.platform_content_directions)
+    if analysis.ai_insight is not None:
+        parts.extend(analysis.ai_insight.category_suggestions)
+        parts.extend(analysis.ai_insight.operation_suggestions)
+        parts.extend(analysis.ai_insight.content_angles)
+        parts.extend(analysis.ai_insight.review_notes)
     text = "\n".join(parts)
     return [term for term in FORBIDDEN_MARKETING_TERMS if term in text]
 
