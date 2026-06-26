@@ -42,12 +42,12 @@ def test_generated_outputs_do_not_include_forbidden_terms() -> None:
 
 def test_generate_outputs_can_attach_ai_product_insight() -> None:
     class FakeAIClient:
-        config = AIConfig(provider="deepseek", api_key="test-key", model="deepseek-chat", base_url="https://api.test")
+        config = AIConfig(provider="deepseek", api_key="test-key", model="deepseek-v4-flash", base_url="https://api.test")
 
         def generate_product_insight(self, product: ProductInput) -> AIProductInsight:
             return AIProductInsight(
                 provider="deepseek",
-                model="deepseek-chat",
+                model="deepseek-v4-flash",
                 status="成功",
                 category_suggestion="桌面照明",
                 product_positioning=f"{product.price_range}内容创作补光",

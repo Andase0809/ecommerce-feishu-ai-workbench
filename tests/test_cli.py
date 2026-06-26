@@ -36,10 +36,10 @@ def test_parse_competitor_args_accepts_explicit_values() -> None:
 
 
 def test_parse_content_generation_accepts_ai_options() -> None:
-    args = parse_args(["--ai-provider", "deepseek", "--ai-model", "deepseek-chat"])
+    args = parse_args(["--ai-provider", "deepseek", "--ai-model", "deepseek-v4-flash"])
 
     assert args.ai_provider == "deepseek"
-    assert args.ai_model == "deepseek-chat"
+    assert args.ai_model == "deepseek-v4-flash"
 
 
 def test_parse_discovery_args_defaults_to_opple_lamp_price_band() -> None:

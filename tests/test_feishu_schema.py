@@ -52,7 +52,7 @@ def test_product_table_includes_ai_fields_when_present() -> None:
     )
     output[0].ai_insight = AIProductInsight(
         provider="deepseek",
-        model="deepseek-chat",
+        model="deepseek-v4-flash",
         status="成功",
         category_suggestion="润色唇部护理",
         product_positioning="日常通勤快速补妆",
@@ -67,4 +67,4 @@ def test_product_table_includes_ai_fields_when_present() -> None:
 
     assert "AI分类建议" in fields
     assert record["AI分类建议"] == "润色唇部护理"
-    assert record["AI模型"] == "deepseek/deepseek-chat"
+    assert record["AI模型"] == "deepseek/deepseek-v4-flash"

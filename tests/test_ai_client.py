@@ -15,13 +15,14 @@ def _product() -> ProductInput:
     )
 
 
-def test_ai_config_uses_provider_specific_key(monkeypatch) -> None:
+def test_ai_config_uses_provider_specific_key_and_default_model(monkeypatch) -> None:
     monkeypatch.setenv("DEEPSEEK_API_KEY", "test-key")
 
-    config = AIConfig.from_env(provider="deepseek", model="deepseek-chat")
+    config = AIConfig.from_env(provider="deepseek")
 
     assert config.provider == "deepseek"
     assert config.api_key == "test-key"
+    assert config.model == "deepseek-v4-flash"
     assert config.base_url == "https://api.deepseek.com"
 
 

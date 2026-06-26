@@ -18,7 +18,7 @@ DEFAULT_BASE_URLS = {
 }
 DEFAULT_MODELS = {
     "openai": "gpt-4o-mini",
-    "deepseek": "deepseek-chat",
+    "deepseek": "deepseek-v4-flash",
 }
 DISABLED_PROVIDERS = {"", "off", "none", "false", "0"}
 

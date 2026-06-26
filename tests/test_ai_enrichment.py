@@ -5,12 +5,12 @@ from src.models import AIProductInsight, ProductInput
 
 def test_enrich_shop_workbench_payload_adds_ai_fields() -> None:
     class FakeAIClient:
-        config = AIConfig(provider="deepseek", api_key="test-key", model="deepseek-chat", base_url="https://api.test")
+        config = AIConfig(provider="deepseek", api_key="test-key", model="deepseek-v4-flash", base_url="https://api.test")
 
         def generate_product_insight(self, product: ProductInput) -> AIProductInsight:
             return AIProductInsight(
                 provider="deepseek",
-                model="deepseek-chat",
+                model="deepseek-v4-flash",
                 status="成功",
                 category_suggestion="学习护眼台灯",
                 product_positioning=product.category,
@@ -42,4 +42,4 @@ def test_enrich_shop_workbench_payload_adds_ai_fields() -> None:
     assert record["AI分类建议"] == "学习护眼台灯"
     assert record["AI标签建议"] == "护眼、学习"
     assert record["AI运营建议"] == "补齐详情页参数"
-    assert record["AI模型"] == "deepseek/deepseek-chat"
+    assert record["AI模型"] == "deepseek/deepseek-v4-flash"

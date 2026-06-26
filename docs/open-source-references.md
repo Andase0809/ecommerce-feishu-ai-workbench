@@ -60,6 +60,12 @@
 - 链接：https://www.drissionpage.cn/
 - 用途：可选浏览器自动化能力和本地调试流程。
 
+### DeepSeek API
+
+- 链接：https://api-docs.deepseek.com/
+- 用途：可选 AI 分类建议、商品定位、标签建议和运营建议生成。
+- 使用方式：通过用户配置的 API Key 调用 OpenAI-compatible 接口；未配置时项目保持规则化分析流程。
+
 ## 本项目差异化
 
 为了避免变成普通商品描述生成器，本项目突出：
