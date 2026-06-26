@@ -102,7 +102,7 @@ def test_product_table_uses_visual_field_types_and_record_values() -> None:
 
     assert product_table.fields[0]["field_name"] == "商品识别卡片"
     assert product_table.fields[1]["field_name"] == "商品主图"
-    assert product_table.fields[2]["field_name"] == "标签摘要"
+    assert product_table.fields[2]["field_name"] == "标签"
     assert fields["商品主图"]["type"] == ATTACHMENT_FIELD
     assert fields["商品链接"]["type"] == URL_FIELD
     assert fields["价格数值"]["type"] == NUMBER_FIELD
@@ -122,9 +122,12 @@ def test_product_identity_and_tags_are_multiline_for_readability() -> None:
     assert "\n" in record["商品识别卡片"]
     assert "SKU 100026582726" in record["商品识别卡片"]
     assert record["标签摘要"] == "4000K / 酷毙灯 / 磁吸\n宿舍"
+    fields = {field["field_name"]: field for field in product_table.fields}
+    assert fields["标签"]["type"] == MULTI_SELECT_FIELD
     assert default_view.name == "商品清单"
     assert "商品名称" in default_view.hidden_fields
-    assert "标签" in default_view.hidden_fields
+    assert "标签摘要" in default_view.hidden_fields
+    assert "标签" not in default_view.hidden_fields
     assert "店铺展示主图URL" in default_view.hidden_fields
 
 
