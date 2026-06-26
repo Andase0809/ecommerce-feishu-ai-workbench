@@ -9,6 +9,7 @@ from src.jd_feishu_schema import (
     SUGGESTION_TABLE_NAME,
     build_competitor_table_payloads,
 )
+from src.feishu_schema import ATTACHMENT_FIELD, NUMBER_FIELD, URL_FIELD
 
 
 def _snapshot(sku_id: str, role: str) -> JdProductSnapshot:
@@ -44,7 +45,17 @@ def test_build_competitor_table_payloads_creates_four_workbench_tables() -> None
         SUGGESTION_TABLE_NAME,
     ]
     own_fields = [field["field_name"] for field in payloads[0].fields]
+    own_field_types = {field["field_name"]: field["type"] for field in payloads[0].fields}
     assert "查看竞品分析" in own_fields
     assert "采集状态" in own_fields
+    assert own_fields[:5] == ["商品识别卡片", "商品主图", "商品链接", "价格数值", "采集状态"]
+    assert own_field_types["商品主图"] == ATTACHMENT_FIELD
+    assert own_field_types["商品链接"] == URL_FIELD
+    assert own_field_types["价格数值"] == NUMBER_FIELD
+    assert payloads[0].attachment_uploads
     assert len(payloads[1].records) == 10
+    assert payloads[1].attachment_uploads
+    assert payloads[1].views[0].name == "竞品清单"
+    assert payloads[1].views[1].name == "竞品图库"
+    assert "主图URL" in payloads[1].views[0].hidden_fields
     assert payloads[2].records[0]["fields"]["机会层级"] in {"高", "中", "低"}

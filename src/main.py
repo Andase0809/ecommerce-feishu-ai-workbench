@@ -121,7 +121,7 @@ def run_competitor_analysis(args: argparse.Namespace) -> int:
     try:
         config = FeishuConfig.from_env(os.getenv("FEISHU_APP_ID"), os.getenv("FEISHU_APP_SECRET"))
         base_name = f"京东{competitor_input.keyword}竞品工作台-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
-        result = FeishuBitableClient(config).sync(table_payloads, base_name=base_name)
+        result = FeishuBitableClient(config).sync(table_payloads, base_name=base_name, upload_attachments=True)
     except FeishuError as exc:
         print(f"飞书同步失败，本地 JSON 已保留：{output_path}")
         raise SystemExit(str(exc)) from exc
