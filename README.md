@@ -130,6 +130,7 @@ python -m src.main sync-shop-workbench --input samples/shop-workbench.example.js
 ```
 
 图片字段会优先上传为飞书附件。上传失败时，系统保留图片 URL 和上传状态，不影响其他记录同步。
+记录写入会自动分批提交，字段与视图元数据会分页读取，临时网络错误或限流类返回会自动重试。
 
 ## 测试
 
@@ -155,3 +156,4 @@ python -m pytest -q --basetemp .pytest-tmp
 - [数据契约](docs/data-contracts.md)
 - [数据治理](docs/data-governance.md)
 - [依赖与集成](docs/dependencies.md)
+- [运行与同步策略](docs/operations.md)

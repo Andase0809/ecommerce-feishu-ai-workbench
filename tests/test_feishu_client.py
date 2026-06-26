@@ -1,4 +1,6 @@
-from src.feishu_client import FeishuBitableClient, _filter_value, _view_property
+import pytest
+
+from src.feishu_client import FeishuBitableClient, FeishuError, _filter_value, _view_property
 from src.feishu_schema import AttachmentUpload, TablePayload, ViewFilter, ViewPayload
 
 
@@ -134,3 +136,132 @@ def test_create_views_reuses_existing_view_before_creating_new_one() -> None:
     assert created_posts == [{"view_name": "商品图库", "view_type": "gallery"}]
     assert patches[0][0].endswith("/views/vew_default")
     assert patches[0][1] == {"property": {"hidden_fields": ["fld_note"]}}
+
+
+def test_batch_create_records_splits_large_payloads() -> None:
+    client = FeishuBitableClient.__new__(FeishuBitableClient)
+    client._record_batch_size = 2
+    batch_sizes: list[int] = []
+
+    def fake_post(uri: str, body: dict) -> dict:
+        assert uri.endswith("/records/batch_create")
+        batch_sizes.append(len(body["records"]))
+        return {"data": {"records": [{"record_id": f"rec_{index}"} for index, _ in enumerate(body["records"])]}}
+
+    client._post = fake_post  # type: ignore[method-assign]
+
+    client._batch_create_records("app_token", "table_id", [{"fields": {"序号": index}} for index in range(5)])
+
+    assert batch_sizes == [2, 2, 1]
+
+
+def test_list_field_metadata_reads_all_pages() -> None:
+    client = FeishuBitableClient.__new__(FeishuBitableClient)
+    requested_uris: list[str] = []
+
+    def fake_get(uri: str) -> dict:
+        requested_uris.append(uri)
+        if "page_token=next_page" in uri:
+            return {
+                "data": {
+                    "items": [{"field_name": "价格", "field_id": "fld_price"}],
+                    "has_more": False,
+                }
+            }
+        return {
+            "data": {
+                "items": [{"field_name": "商品名", "field_id": "fld_name"}],
+                "has_more": True,
+                "page_token": "next_page",
+            }
+        }
+
+    client._get = fake_get  # type: ignore[method-assign]
+
+    fields = client._list_field_metadata("app_token", "table_id")
+
+    assert list(fields) == ["商品名", "价格"]
+    assert requested_uris[0].endswith("/fields?page_size=100")
+    assert requested_uris[1].endswith("/fields?page_size=100&page_token=next_page")
+
+
+def test_list_view_ids_reads_all_pages() -> None:
+    client = FeishuBitableClient.__new__(FeishuBitableClient)
+
+    def fake_get(uri: str) -> dict:
+        if "page_token=next_page" in uri:
+            return {
+                "data": {
+                    "items": [{"view_name": "商品图库", "view_id": "vew_gallery"}],
+                    "has_more": False,
+                }
+            }
+        return {
+            "data": {
+                "items": [{"view_name": "商品清单", "view_id": "vew_grid"}],
+                "has_more": True,
+                "page_token": "next_page",
+            }
+        }
+
+    client._get = fake_get  # type: ignore[method-assign]
+
+    assert client._list_view_ids("app_token", "table_id") == {
+        "商品清单": "vew_grid",
+        "商品图库": "vew_gallery",
+    }
+
+
+def test_request_retries_retryable_payload_before_success() -> None:
+    client = FeishuBitableClient.__new__(FeishuBitableClient)
+    client._request_max_attempts = 3
+    client._request_backoff_seconds = 0
+    calls: list[str] = []
+
+    def fake_request_once(method: object, uri: str, body: dict | None = None) -> dict:
+        calls.append(uri)
+        if len(calls) == 1:
+            return {"code": 99991663, "msg": "rate limit"}
+        return {"code": 0, "data": {"ok": True}}
+
+    client._request_once = fake_request_once  # type: ignore[method-assign]
+
+    assert client._request(object(), "/open-apis/test") == {"code": 0, "data": {"ok": True}}
+    assert calls == ["/open-apis/test", "/open-apis/test"]
+
+
+def test_request_retries_transient_exception_before_success() -> None:
+    client = FeishuBitableClient.__new__(FeishuBitableClient)
+    client._request_max_attempts = 3
+    client._request_backoff_seconds = 0
+    calls = 0
+
+    def fake_request_once(method: object, uri: str, body: dict | None = None) -> dict:
+        nonlocal calls
+        calls += 1
+        if calls == 1:
+            raise TimeoutError("temporary timeout")
+        return {"code": 0, "data": {"ok": True}}
+
+    client._request_once = fake_request_once  # type: ignore[method-assign]
+
+    assert client._request(object(), "/open-apis/test")["code"] == 0
+    assert calls == 2
+
+
+def test_request_fails_fast_for_non_retryable_payload() -> None:
+    client = FeishuBitableClient.__new__(FeishuBitableClient)
+    client._request_max_attempts = 3
+    client._request_backoff_seconds = 0
+    calls = 0
+
+    def fake_request_once(method: object, uri: str, body: dict | None = None) -> dict:
+        nonlocal calls
+        calls += 1
+        return {"code": 1254001, "msg": "invalid parameter"}
+
+    client._request_once = fake_request_once  # type: ignore[method-assign]
+
+    with pytest.raises(FeishuError, match="飞书 OpenAPI 调用失败"):
+        client._request(object(), "/open-apis/test")
+    assert calls == 1

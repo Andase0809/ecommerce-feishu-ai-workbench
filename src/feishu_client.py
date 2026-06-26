@@ -2,18 +2,31 @@ from __future__ import annotations
 
 import json
 import mimetypes
+import time
 import uuid
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 from urllib.error import URLError
-from urllib.parse import urlparse
+from urllib.parse import parse_qsl, urlencode, urlparse, urlsplit, urlunsplit
 from urllib.request import Request, urlopen
 
 import lark_oapi as lark
 
 from .feishu_schema import TablePayload, ViewFilter, ViewPayload
+
+
+FEISHU_PAGE_SIZE = 100
+FEISHU_RECORD_BATCH_SIZE = 500
+FEISHU_REQUEST_MAX_ATTEMPTS = 3
+FEISHU_REQUEST_BACKOFF_SECONDS = 0.5
+RETRYABLE_FEISHU_CODES = {
+    "99991400",
+    "99991663",
+    "99991664",
+    "99991665",
+}
 
 
 class FeishuError(RuntimeError):
@@ -41,10 +54,20 @@ class FeishuSyncResult:
 
 
 class FeishuBitableClient:
-    def __init__(self, config: FeishuConfig) -> None:
+    def __init__(
+        self,
+        config: FeishuConfig,
+        *,
+        request_max_attempts: int = FEISHU_REQUEST_MAX_ATTEMPTS,
+        request_backoff_seconds: float = FEISHU_REQUEST_BACKOFF_SECONDS,
+        record_batch_size: int = FEISHU_RECORD_BATCH_SIZE,
+    ) -> None:
         self._config = config
         self._client = lark.Client.builder().app_id(config.app_id).app_secret(config.app_secret).build()
         self._tenant_access_token: str | None = None
+        self._request_max_attempts = max(1, request_max_attempts)
+        self._request_backoff_seconds = max(0.0, request_backoff_seconds)
+        self._record_batch_size = max(1, record_batch_size)
 
     def sync(
         self,
@@ -91,23 +114,38 @@ class FeishuBitableClient:
         return table_id
 
     def _batch_create_records(self, app_token: str, table_id: str, records: list[dict]) -> None:
-        response = self._post(
-            f"/open-apis/bitable/v1/apps/{app_token}/tables/{table_id}/records/batch_create",
-            {"records": records},
-        )
-        created = response.get("data", {}).get("records", [])
-        if len(created) != len(records):
-            raise FeishuError(f"写入记录数量不一致，期望 {len(records)} 条，实际返回 {len(created)} 条")
+        batch_size = getattr(self, "_record_batch_size", FEISHU_RECORD_BATCH_SIZE)
+        for offset, batch in _chunks(records, batch_size):
+            response = self._post(
+                f"/open-apis/bitable/v1/apps/{app_token}/tables/{table_id}/records/batch_create",
+                {"records": batch},
+            )
+            created = response.get("data", {}).get("records", [])
+            if len(created) != len(batch):
+                raise FeishuError(
+                    f"写入记录数量不一致，批次起点 {offset}，期望 {len(batch)} 条，实际返回 {len(created)} 条"
+                )
 
     def _list_field_metadata(self, app_token: str, table_id: str) -> dict[str, dict]:
-        response = self._get(f"/open-apis/bitable/v1/apps/{app_token}/tables/{table_id}/fields?page_size=100")
-        fields = response.get("data", {}).get("items", [])
+        fields = self._list_paginated_items(f"/open-apis/bitable/v1/apps/{app_token}/tables/{table_id}/fields")
         return {field["field_name"]: field for field in fields if field.get("field_name") and field.get("field_id")}
 
     def _list_view_ids(self, app_token: str, table_id: str) -> dict[str, str]:
-        response = self._get(f"/open-apis/bitable/v1/apps/{app_token}/tables/{table_id}/views?page_size=100")
-        views = response.get("data", {}).get("items", [])
+        views = self._list_paginated_items(f"/open-apis/bitable/v1/apps/{app_token}/tables/{table_id}/views")
         return {view["view_name"]: view["view_id"] for view in views if view.get("view_name") and view.get("view_id")}
+
+    def _list_paginated_items(self, uri: str) -> list[dict]:
+        items: list[dict] = []
+        page_token: str | None = None
+        while True:
+            request_uri = _with_query_params(uri, {"page_size": str(FEISHU_PAGE_SIZE), "page_token": page_token or ""})
+            response = self._get(request_uri)
+            data = response.get("data", {})
+            items.extend(data.get("items", []))
+            page_token = data.get("page_token")
+            if not data.get("has_more") or not page_token:
+                break
+        return items
 
     def _create_views(
         self,
@@ -233,15 +271,38 @@ class FeishuBitableClient:
         return self._request(lark.HttpMethod.POST, uri, body)
 
     def _request(self, method: lark.HttpMethod, uri: str, body: dict | None = None) -> dict:
+        attempts = getattr(self, "_request_max_attempts", FEISHU_REQUEST_MAX_ATTEMPTS)
+        last_error: BaseException | None = None
+        for attempt in range(1, attempts + 1):
+            try:
+                payload = self._request_once(method, uri, body)
+            except (TimeoutError, ConnectionError, URLError) as exc:
+                last_error = exc
+                if attempt >= attempts:
+                    raise FeishuError(f"飞书 OpenAPI 网络调用失败：{exc}") from exc
+                self._sleep_before_retry(attempt)
+                continue
+            if payload.get("code", 0) == 0:
+                return payload
+            if attempt < attempts and _is_retryable_payload(payload):
+                self._sleep_before_retry(attempt)
+                continue
+            raise FeishuError(f"飞书 OpenAPI 调用失败：{payload}")
+        raise FeishuError(f"飞书 OpenAPI 调用失败：{last_error}")
+
+    def _request_once(self, method: lark.HttpMethod, uri: str, body: dict | None = None) -> dict:
         builder = lark.BaseRequest.builder().http_method(method).uri(uri).token_types({lark.AccessTokenType.TENANT})
         if body is not None:
             builder.body(body)
         request = builder.build()
         response = self._client.request(request)
-        payload = _decode_response(response)
-        if payload.get("code", 0) != 0:
-            raise FeishuError(f"飞书 OpenAPI 调用失败：{payload}")
-        return payload
+        return _decode_response(response)
+
+    def _sleep_before_retry(self, attempt: int) -> None:
+        backoff = getattr(self, "_request_backoff_seconds", FEISHU_REQUEST_BACKOFF_SECONDS)
+        if backoff <= 0:
+            return
+        time.sleep(backoff * (2 ** (attempt - 1)))
 
 
 def _decode_response(response: object) -> dict:
@@ -252,6 +313,27 @@ def _decode_response(response: object) -> dict:
     if isinstance(content, bytes):
         content = content.decode("utf-8")
     return json.loads(content)
+
+
+def _is_retryable_payload(payload: dict) -> bool:
+    code = str(payload.get("code", ""))
+    message = f"{payload.get('msg', '')} {payload.get('message', '')}".lower()
+    return code in RETRYABLE_FEISHU_CODES or any(term in message for term in ("rate", "too many", "timeout", "temporar"))
+
+
+def _with_query_params(uri: str, params: dict[str, str]) -> str:
+    parts = urlsplit(uri)
+    query = dict(parse_qsl(parts.query, keep_blank_values=True))
+    for key, value in params.items():
+        if value:
+            query[key] = value
+        else:
+            query.pop(key, None)
+    return urlunsplit((parts.scheme, parts.netloc, parts.path, urlencode(query), parts.fragment))
+
+
+def _chunks(records: list[dict], batch_size: int) -> list[tuple[int, list[dict]]]:
+    return [(offset, records[offset : offset + batch_size]) for offset in range(0, len(records), batch_size)]
 
 
 def _view_property(view: ViewPayload, field_metadata: dict[str, Any]) -> dict[str, Any]:
@@ -312,12 +394,16 @@ def _select_option_ids(value: str | list[str] | int | float | bool, field: dict)
 def _download_file(source_url: str) -> tuple[bytes, str]:
     url = f"https:{source_url}" if source_url.startswith("//") else source_url
     request = Request(url, headers={"User-Agent": "Mozilla/5.0"})
-    try:
-        with urlopen(request, timeout=20) as response:  # noqa: S310 - user-provided public image URLs are expected input.
-            content = response.read(20 * 1024 * 1024 + 1)
-            content_type = response.headers.get_content_type() or "application/octet-stream"
-    except URLError as exc:
-        raise FeishuError(f"下载图片失败：{exc}") from exc
+    for attempt in range(1, FEISHU_REQUEST_MAX_ATTEMPTS + 1):
+        try:
+            with urlopen(request, timeout=20) as response:  # noqa: S310 - user-provided public image URLs are expected input.
+                content = response.read(20 * 1024 * 1024 + 1)
+                content_type = response.headers.get_content_type() or "application/octet-stream"
+            break
+        except URLError as exc:
+            if attempt >= FEISHU_REQUEST_MAX_ATTEMPTS:
+                raise FeishuError(f"下载图片失败：{exc}") from exc
+            _sleep_for_retry(attempt)
     if len(content) > 20 * 1024 * 1024:
         raise FeishuError("图片超过 20MB")
     return content, content_type
@@ -362,6 +448,17 @@ def _multipart_body(
 
 
 def _open_json(request: Request) -> dict:
-    with urlopen(request, timeout=30) as response:  # noqa: S310 - Feishu OpenAPI endpoint.
-        content = response.read().decode("utf-8")
+    for attempt in range(1, FEISHU_REQUEST_MAX_ATTEMPTS + 1):
+        try:
+            with urlopen(request, timeout=30) as response:  # noqa: S310 - Feishu OpenAPI endpoint.
+                content = response.read().decode("utf-8")
+            break
+        except URLError as exc:
+            if attempt >= FEISHU_REQUEST_MAX_ATTEMPTS:
+                raise FeishuError(f"飞书 HTTP 调用失败：{exc}") from exc
+            _sleep_for_retry(attempt)
     return json.loads(content)
+
+
+def _sleep_for_retry(attempt: int) -> None:
+    time.sleep(FEISHU_REQUEST_BACKOFF_SECONDS * (2 ** (attempt - 1)))

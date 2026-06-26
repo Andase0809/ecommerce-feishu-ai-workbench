@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ecommerce-feishu-ai-workbench"
+version = "0.1.0"
+description = "Product data analysis and Feishu Bitable synchronization toolkit"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { file = "LICENSE" }
+authors = [{ name = "Andase0809" }]
+dependencies = [
+  "pydantic>=2.7,<3",
+  "python-dotenv>=1.0,<2",
+  "lark-oapi>=1.4,<2",
+  "beautifulsoup4>=4.12,<5",
+  "playwright>=1.45,<2",
+  "DrissionPage>=4.1,<5",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0,<9"]
+
+[project.scripts]
+ecommerce-feishu-workbench = "src.main:main"
+
+[tool.setuptools]
+packages = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
